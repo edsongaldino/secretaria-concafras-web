@@ -1,0 +1,27 @@
+<div class="usuarios-container">
+  <h2>Lista de Usuários</h2>
+
+  <div *ngIf="loading">Carregando...</div>
+  <div *ngIf="errorMessage">{{ errorMessage }}</div>
+
+  <table *ngIf="!loading && usuarios.length > 0" border="1" cellpadding="8">
+    <thead>
+      <tr>
+        <th>Nome</th>
+        <th>Email</th>
+        <th>Telefone</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let usuario of usuarios">
+        <td>{{ usuario.nome }}</td>
+        <td>{{ usuario.email }}</td>
+        <td>{{ usuario.telefone }}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div *ngIf="!loading && usuarios.length === 0">
+    Nenhum usuário encontrado.
+  </div>
+</div>

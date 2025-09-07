@@ -1,0 +1,13 @@
+<div class="home-container">
+  <h1>Bem-vindo ao sistema 🎉</h1>
+
+  <nav>
+    <ul>
+      <li><a routerLink="/usuarios">Gerenciar Usuários</a></li>
+      <li><a [routerLink]="['/inscricao', '11111111-1111-1111-1111-111111111111']">Inscrição</a></li>
+      <li><a (click)="logout()">Sair</a></li>
+    </ul>
+  </nav>
+
+  <router-outlet></router-outlet>
+</div>

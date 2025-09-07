@@ -1,0 +1,81 @@
+<h2 class="mat-headline mb-4 text-center">
+  {{ id ? 'Editar Evento' : 'Novo Evento' }}
+</h2>
+
+<!-- Ficha de Inscrição -->
+<div class="form-wrapper">
+    <form [formGroup]="form" (ngSubmit)="salvar()">
+    <div class="row">
+        <div class="col-md-8">
+        <mat-form-field appearance="outline" class="w-100">
+            <mat-label>Título</mat-label>
+            <input matInput formControlName="titulo" required />
+        </mat-form-field>
+        </div>
+
+        <div class="col-md-4">
+        <mat-form-field appearance="outline" class="w-100">
+            <mat-label>Banner (URL)</mat-label>
+            <input matInput formControlName="bannerUrl" />
+        </mat-form-field>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+        <mat-form-field appearance="outline" class="w-100">
+            <mat-label>Data de Início</mat-label>
+            <input matInput type="date" formControlName="dataInicio" required />
+        </mat-form-field>
+        </div>
+
+        <div class="col-md-6">
+        <mat-form-field appearance="outline" class="w-100">
+            <mat-label>Data de Término</mat-label>
+            <input matInput type="date" formControlName="dataFim" required />
+        </mat-form-field>
+        </div>
+    </div>
+
+     <div class="row">
+        <div class="col-md-6">
+        <mat-form-field appearance="outline" class="w-100">
+            <mat-label>Data de Início (Inscrição)</mat-label>
+            <input matInput type="date" formControlName="inscricaoInicio" required />
+        </mat-form-field>
+        </div>
+
+        <div class="col-md-6">
+        <mat-form-field appearance="outline" class="w-100">
+            <mat-label>Data de Término (Inscrição)</mat-label>
+            <input matInput type="date" formControlName="inscricaoFim" required />
+        </mat-form-field>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+        <mat-form-field appearance="outline" class="w-100">
+            <mat-label>Valor Inscrição (Criança)</mat-label>
+            <input matInput type="number" formControlName="valorInscricaoCrianca" required />
+        </mat-form-field>
+        </div>
+
+        <div class="col-md-6">
+        <mat-form-field appearance="outline" class="w-100">
+            <mat-label>Valor Inscrição (Adulto)</mat-label>
+            <input matInput type="number" formControlName="valorInscricaoAdulto" required />
+        </mat-form-field>
+        </div>
+    </div>
+
+    <h3 class="mat-subheading-2 mt-4">Endereço</h3>
+    <app-endereco *ngIf="enderecoForm" [formGroup]="enderecoForm"></app-endereco>
+
+    <div class="text-center mt-4">
+        <button mat-raised-button color="primary" type="submit" [disabled]="form.invalid || carregando">
+        {{ id ? 'Salvar Alterações' : 'Cadastrar Evento' }}
+        </button>
+    </div>
+    </form>
+</div>
