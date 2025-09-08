@@ -18,6 +18,8 @@ import { CursoService } from '../../../core/services/curso.service';
 import { Evento } from '../../../core/models/evento.model';
 import { ComissaoEventoService } from '../../../core/services/comissao-evento.service';
 import { Router } from '@angular/router';
+import Swal from 'sweetalert2';
+import { NotificationService } from '../../../core/services/notification.service';
 
 type Publico = 'Crianca' | 'Jovem' | 'Adulto';
 
@@ -50,7 +52,8 @@ export class InscricaoForm implements OnInit {
     private inscricaoService: InscricaoService,
     private cursoService: CursoService,
     private comissaoEventoService: ComissaoEventoService,
-    private router: Router
+    private router: Router,
+    private notify: NotificationService
   ) {}
 
   ngOnInit(): void {
@@ -282,7 +285,12 @@ export class InscricaoForm implements OnInit {
       );
 
       if (!participante?.id) {
-        console.error('Participante não encontrado ou não pôde ser criado.');
+        Swal.fire({
+          icon: 'error',
+          title: 'Erro ao salvar!',
+          text: 'Participante não encontrado ou não pôde ser criado.',
+          confirmButtonText: 'Tentar novamente'
+        });
         return;
       }
 
@@ -303,15 +311,14 @@ export class InscricaoForm implements OnInit {
         participante.id;
 
 
-      this.router.navigate([
-        '/eventos',
-        eventoId,
-        'inscricoes',
-        responsavelId
-      ]);
+      this.notify.successCenterRedirect(
+        'Inscrição concluída!',
+        'Na próxima tela você pode efetuar o pagamento ou incluir mais inscrições.',
+        ['/eventos', eventoId, 'inscricoes', responsavelId]
+      );
 
     } catch (err) {
-      console.error('Erro ao realizar a inscrição:', err);
+      this.notify.errorCenter('Erro ao salvar!!', 'Não foi possível concluir sua inscrição.');
     }
   }
 
