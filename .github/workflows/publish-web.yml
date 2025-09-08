@@ -1,0 +1,68 @@
+name: Front - Build & Deploy (Angular → VPS)
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install deps
+        run: npm ci
+
+      # Força saída do build em ./dist (independe do nome do projeto no angular.json)
+      - name: Build (production)
+        run: npm run build -- --configuration production --output-path=dist
+
+      - name: Pack dist
+        run: |
+          mkdir -p package
+          tar -czf package/dist.tar.gz -C dist .
+
+      - name: Upload dist.tar.gz to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.DO_HOST }}
+          username: ${{ secrets.DO_USER }}
+          key: ${{ secrets.DO_KEY }}
+          port: 22
+          source: "package/dist.tar.gz"
+          target: "/root/apps/secretaria-concafras/web/tmp"
+
+      - name: Atomic replace dist & restart web
+        uses: appleboy/ssh-action@v1.1.0
+        with:
+          host: ${{ secrets.DO_HOST }}
+          username: ${{ secrets.DO_USER }}
+          key: ${{ secrets.DO_KEY }}
+          port: 22
+          script: |
+            set -e
+            BASE="/root/apps/secretaria-concafras/web"
+            mkdir -p "$BASE/tmp" "$BASE/dist_new"
+            tar -xzf "$BASE/tmp/dist.tar.gz" -C "$BASE/dist_new"
+
+            # sanity checks
+            if [ -z "$(ls -A "$BASE/dist_new")" ]; then echo "staging vazio"; exit 1; fi
+            if [ ! -f "$BASE/dist_new/index.html" ] && [ ! -f "$BASE/dist_new/index.csr.html" ]; then echo "sem index.html"; exit 1; fi
+            [ -f "$BASE/dist_new/index.csr.html" ] && [ ! -f "$BASE/dist_new/index.html" ] && mv "$BASE/dist_new/index.csr.html" "$BASE/dist_new/index.html"
+
+            rm -rf "$BASE/dist"
+            mv "$BASE/dist_new" "$BASE/dist"
+            rm -f "$BASE/tmp/dist.tar.gz"
+
+            # sobe/recicla o serviço web (nginx)
+            cd "/root/apps/secretaria-concafras"
+            docker compose --env-file .env up -d web
