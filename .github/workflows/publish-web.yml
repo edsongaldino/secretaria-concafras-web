@@ -24,7 +24,8 @@ jobs:
 
       # Força saída do build em ./dist (independe do nome do projeto no angular.json)
       - name: Build (production)
-        run: npm run build -- --configuration production --output-path=dist
+        run: npm run build -- --configuration production --output-path=dist --prerender=false --ssr=false
+
 
       - name: Pack dist
         run: |
