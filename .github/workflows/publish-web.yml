@@ -26,14 +26,39 @@ jobs:
       - name: Install deps
         run: npm ci
 
-      # Build CSR em production (seu angular.json deve estar com outputMode: "static" e prerender: false)
+      # Build CSR (seu angular.json: outputMode: "static", prerender: false)
       - name: Build (production CSR)
         run: npm run build -- --configuration production --output-path=dist
+
+      # Descobre onde ficou o index.html (dist/, dist/browser, dist/ProjetoFrontAngular, etc.)
+      - name: Find dist folder
+        id: finddist
+        shell: bash
+        run: |
+          set -e
+          CANDIDATES=(
+            "dist"
+            "dist/browser"
+            "dist/ProjetoFrontAngular"
+            "dist/ProjetoFrontAngular/browser"
+          )
+          for d in "${CANDIDATES[@]}"; do
+            if [ -f "$d/index.html" ] || [ -f "$d/index.csr.html" ]; then
+              echo "dist_dir=$d" >> "$GITHUB_OUTPUT"
+              echo "Usando dist em: $d"
+              exit 0
+            fi
+          done
+          echo "Não encontrei index.html em dist. Listando dist/:" >&2
+          ls -lah dist || true
+          echo "Falha ao localizar a pasta correta do build." >&2
+          exit 1
 
       - name: Pack dist
         run: |
           mkdir -p package
-          tar -czf package/dist.tar.gz -C dist .
+          tar -czf package/dist.tar.gz -C "${{ steps.finddist.outputs.dist_dir }}" .
+          ls -lh package/dist.tar.gz
 
       # Garante pastas remotas
       - name: Prepare remote dirs
@@ -48,7 +73,7 @@ jobs:
             mkdir -p /root/apps/secretaria-concafras/web/tmp
             mkdir -p /root/apps/secretaria-concafras/web/dist
 
-      # Upload achatado (sem subpasta "package/")
+      # Upload achatado (sem recriar "package/")
       - name: Upload dist.tar.gz to server
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -74,7 +99,7 @@ jobs:
 
             mkdir -p "$BASE/tmp" "$BASE/dist_new"
 
-            # encontra o pacote mesmo se caiu em subpasta
+            # encontra o pacote, mesmo se ficou em subpasta
             PKG="$(find "$BASE/tmp" -maxdepth 2 -type f -name 'dist.tar.gz' -print -quit || true)"
             if [ -z "$PKG" ]; then
               echo "ERRO: dist.tar.gz não encontrado em $BASE/tmp"
@@ -84,10 +109,34 @@ jobs:
             echo "Usando pacote: $PKG"
             tar -xzf "$PKG" -C "$BASE/dist_new"
 
-            # sanity checks
-            if [ -z "$(ls -A "$BASE/dist_new")" ]; then echo "staging vazio"; exit 1; fi
-            if [ ! -f "$BASE/dist_new/index.html" ] && [ ! -f "$BASE/dist_new/index.csr.html" ]; then echo "sem index.html"; exit 1; fi
-            [ -f "$BASE/dist_new/index.csr.html" ] && [ ! -f "$BASE/dist_new/index.html" ] && mv "$BASE/dist_new/index.csr.html" "$BASE/dist_new/index.html"
+            # Se não veio index.html na raiz, tente ajustar (browser/ ou única subpasta)
+            if [ ! -f "$BASE/dist_new/index.html" ] && [ ! -f "$BASE/dist_new/index.csr.html" ]; then
+              if [ -f "$BASE/dist_new/browser/index.html" ] || [ -f "$BASE/dist_new/browser/index.csr.html" ]; then
+                shopt -s dotglob
+                mv "$BASE/dist_new/browser"/* "$BASE/dist_new/"
+                rmdir "$BASE/dist_new/browser"
+                shopt -u dotglob
+              else
+                # se houver exatamente uma subpasta e ela tiver index.html, sobe um nível
+                SUB="$(find "$BASE/dist_new" -mindepth 1 -maxdepth 1 -type d -print -quit || true)"
+                if [ -n "$SUB" ] && { [ -f "$SUB/index.html" ] || [ -f "$SUB/index.csr.html" ]; }; then
+                  shopt -s dotglob
+                  mv "$SUB"/* "$BASE/dist_new/"
+                  rmdir "$SUB"
+                  shopt -u dotglob
+                fi
+              fi
+            fi
+
+            # sanity checks finais
+            if [ ! -f "$BASE/dist_new/index.html" ] && [ -f "$BASE/dist_new/index.csr.html" ]; then
+              mv "$BASE/dist_new/index.csr.html" "$BASE/dist_new/index.html"
+            fi
+            if [ ! -f "$BASE/dist_new/index.html" ]; then
+              echo "sem index.html após normalização"
+              find "$BASE/dist_new" -maxdepth 2 -type f -name 'index*.html' -print || true
+              exit 1
+            fi
 
             # backup do dist atual (rollback fácil)
             if [ -d "$BASE/dist" ] && [ -n "$(ls -A "$BASE/dist")" ]; then
