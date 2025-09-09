@@ -26,11 +26,11 @@ jobs:
       - name: Install deps
         run: npm ci
 
-      # Build CSR (seu angular.json: outputMode: "static", prerender: false)
+      # Build CSR (angular.json: outputMode: "static", prerender: false)
       - name: Build (production CSR)
         run: npm run build -- --configuration production --output-path=dist
 
-      # Descobre onde ficou o index.html (dist/, dist/browser, dist/ProjetoFrontAngular, etc.)
+      # Descobre onde está o index.html (dist/, dist/browser, dist/ProjetoFrontAngular, etc.)
       - name: Find dist folder
         id: finddist
         shell: bash
@@ -51,7 +51,6 @@ jobs:
           done
           echo "Não encontrei index.html em dist. Listando dist/:" >&2
           ls -lah dist || true
-          echo "Falha ao localizar a pasta correta do build." >&2
           exit 1
 
       - name: Pack dist
@@ -85,7 +84,7 @@ jobs:
           target: "/root/apps/secretaria-concafras/web/tmp/"
           strip_components: 1
 
-      - name: Atomic replace dist (with backup) & restart web
+      - name: Atomic replace dist (with backup) & restart ONLY web
         uses: appleboy/ssh-action@v1.1.0
         with:
           host: ${{ secrets.DO_HOST }}
@@ -99,7 +98,7 @@ jobs:
 
             mkdir -p "$BASE/tmp" "$BASE/dist_new"
 
-            # encontra o pacote, mesmo se ficou em subpasta
+            # encontra o pacote, mesmo se caiu em subpasta
             PKG="$(find "$BASE/tmp" -maxdepth 2 -type f -name 'dist.tar.gz' -print -quit || true)"
             if [ -z "$PKG" ]; then
               echo "ERRO: dist.tar.gz não encontrado em $BASE/tmp"
@@ -109,7 +108,7 @@ jobs:
             echo "Usando pacote: $PKG"
             tar -xzf "$PKG" -C "$BASE/dist_new"
 
-            # Se não veio index.html na raiz, tente ajustar (browser/ ou única subpasta)
+            # Normaliza se vier com 'browser/' ou única subpasta
             if [ ! -f "$BASE/dist_new/index.html" ] && [ ! -f "$BASE/dist_new/index.csr.html" ]; then
               if [ -f "$BASE/dist_new/browser/index.html" ] || [ -f "$BASE/dist_new/browser/index.csr.html" ]; then
                 shopt -s dotglob
@@ -117,7 +116,6 @@ jobs:
                 rmdir "$BASE/dist_new/browser"
                 shopt -u dotglob
               else
-                # se houver exatamente uma subpasta e ela tiver index.html, sobe um nível
                 SUB="$(find "$BASE/dist_new" -mindepth 1 -maxdepth 1 -type d -print -quit || true)"
                 if [ -n "$SUB" ] && { [ -f "$SUB/index.html" ] || [ -f "$SUB/index.csr.html" ]; }; then
                   shopt -s dotglob
@@ -148,6 +146,6 @@ jobs:
             rm -f "$BASE/tmp/dist.tar.gz" || true
             rm -f "$PKG" || true
 
-            # (re)sobe nginx
+            # ⚠️ Sobe apenas o web, sem tocar nas dependências (evita pull da API)
             cd "/root/apps/secretaria-concafras"
-            docker compose --env-file .env up -d web
+            docker compose --env-file .env up -d --no-deps web || docker compose restart web || true
