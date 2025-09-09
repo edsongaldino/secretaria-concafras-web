@@ -26,8 +26,7 @@ jobs:
       - name: Install deps
         run: npm ci
 
-      # Build CSR em production (sem SSR/prerender)
-      # -> requer angular.json com outputMode: "browser" na configuração production
+      # Build CSR em production (seu angular.json deve estar com outputMode: "static" e prerender: false)
       - name: Build (production CSR)
         run: npm run build -- --configuration production --output-path=dist
 
@@ -49,6 +48,7 @@ jobs:
             mkdir -p /root/apps/secretaria-concafras/web/tmp
             mkdir -p /root/apps/secretaria-concafras/web/dist
 
+      # Upload achatado (sem subpasta "package/")
       - name: Upload dist.tar.gz to server
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -57,7 +57,8 @@ jobs:
           key: ${{ secrets.DO_KEY }}
           port: 22
           source: "package/dist.tar.gz"
-          target: "/root/apps/secretaria-concafras/web/tmp"
+          target: "/root/apps/secretaria-concafras/web/tmp/"
+          strip_components: 1
 
       - name: Atomic replace dist (with backup) & restart web
         uses: appleboy/ssh-action@v1.1.0
@@ -72,7 +73,16 @@ jobs:
             TS="$(date +%Y%m%d-%H%M%S)"
 
             mkdir -p "$BASE/tmp" "$BASE/dist_new"
-            tar -xzf "$BASE/tmp/dist.tar.gz" -C "$BASE/dist_new"
+
+            # encontra o pacote mesmo se caiu em subpasta
+            PKG="$(find "$BASE/tmp" -maxdepth 2 -type f -name 'dist.tar.gz' -print -quit || true)"
+            if [ -z "$PKG" ]; then
+              echo "ERRO: dist.tar.gz não encontrado em $BASE/tmp"
+              ls -lah "$BASE/tmp" || true
+              exit 1
+            fi
+            echo "Usando pacote: $PKG"
+            tar -xzf "$PKG" -C "$BASE/dist_new"
 
             # sanity checks
             if [ -z "$(ls -A "$BASE/dist_new")" ]; then echo "staging vazio"; exit 1; fi
@@ -86,7 +96,8 @@ jobs:
 
             rm -rf "$BASE/dist"
             mv "$BASE/dist_new" "$BASE/dist"
-            rm -f "$BASE/tmp/dist.tar.gz"
+            rm -f "$BASE/tmp/dist.tar.gz" || true
+            rm -f "$PKG" || true
 
             # (re)sobe nginx
             cd "/root/apps/secretaria-concafras"
