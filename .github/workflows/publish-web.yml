@@ -7,7 +7,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  OWNER: seu-user-ou-org         # >>> minúsculo!
+  OWNER: edsongaldino        # >>> minúsculo!
   IMAGE_NAME: secretaria-concafras-web
   TAG: latest
 
