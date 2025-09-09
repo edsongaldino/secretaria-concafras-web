@@ -5,6 +5,10 @@ on:
     branches: ["main"]
   workflow_dispatch:
 
+concurrency:
+  group: front-deploy
+  cancel-in-progress: true
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
@@ -22,15 +26,28 @@ jobs:
       - name: Install deps
         run: npm ci
 
-      # Força saída do build em ./dist (independe do nome do projeto no angular.json)
-      - name: Build (production)
-        run: npm run build -- --configuration production --output-path=dist --prerender=false --ssr=false
-
+      # Build CSR em production (sem SSR/prerender)
+      # -> requer angular.json com outputMode: "browser" na configuração production
+      - name: Build (production CSR)
+        run: npm run build -- --configuration production --output-path=dist
 
       - name: Pack dist
         run: |
           mkdir -p package
           tar -czf package/dist.tar.gz -C dist .
+
+      # Garante pastas remotas
+      - name: Prepare remote dirs
+        uses: appleboy/ssh-action@v1.1.0
+        with:
+          host: ${{ secrets.DO_HOST }}
+          username: ${{ secrets.DO_USER }}
+          key: ${{ secrets.DO_KEY }}
+          port: 22
+          script: |
+            set -e
+            mkdir -p /root/apps/secretaria-concafras/web/tmp
+            mkdir -p /root/apps/secretaria-concafras/web/dist
 
       - name: Upload dist.tar.gz to server
         uses: appleboy/scp-action@v0.1.7
@@ -42,7 +59,7 @@ jobs:
           source: "package/dist.tar.gz"
           target: "/root/apps/secretaria-concafras/web/tmp"
 
-      - name: Atomic replace dist & restart web
+      - name: Atomic replace dist (with backup) & restart web
         uses: appleboy/ssh-action@v1.1.0
         with:
           host: ${{ secrets.DO_HOST }}
@@ -50,8 +67,10 @@ jobs:
           key: ${{ secrets.DO_KEY }}
           port: 22
           script: |
-            set -e
+            set -euo pipefail
             BASE="/root/apps/secretaria-concafras/web"
+            TS="$(date +%Y%m%d-%H%M%S)"
+
             mkdir -p "$BASE/tmp" "$BASE/dist_new"
             tar -xzf "$BASE/tmp/dist.tar.gz" -C "$BASE/dist_new"
 
@@ -60,10 +79,15 @@ jobs:
             if [ ! -f "$BASE/dist_new/index.html" ] && [ ! -f "$BASE/dist_new/index.csr.html" ]; then echo "sem index.html"; exit 1; fi
             [ -f "$BASE/dist_new/index.csr.html" ] && [ ! -f "$BASE/dist_new/index.html" ] && mv "$BASE/dist_new/index.csr.html" "$BASE/dist_new/index.html"
 
+            # backup do dist atual (rollback fácil)
+            if [ -d "$BASE/dist" ] && [ -n "$(ls -A "$BASE/dist")" ]; then
+              tar -czf "$BASE/backup-$TS.tar.gz" -C "$BASE/dist" .
+            fi
+
             rm -rf "$BASE/dist"
             mv "$BASE/dist_new" "$BASE/dist"
             rm -f "$BASE/tmp/dist.tar.gz"
 
-            # sobe/recicla o serviço web (nginx)
+            # (re)sobe nginx
             cd "/root/apps/secretaria-concafras"
             docker compose --env-file .env up -d web
