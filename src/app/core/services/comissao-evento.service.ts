@@ -3,11 +3,12 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ComissaoEvento } from '../models/comissao-evento.model';
+import { environment } from '../../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class ComissaoEventoService {
-  // se preferir, troque por environment.apiBaseUrl + '/comissoes-evento'
-  private readonly baseUrl = '/api/comissoes-evento';
+
+  private readonly apiUrl = `${environment.apiUrl}/comissoes-evento`;
 
   constructor(private http: HttpClient) {}
 
@@ -18,14 +19,14 @@ export class ComissaoEventoService {
    */
   listarPorEvento(eventoId: string): Observable<ComissaoEvento[]> {
     const params = new HttpParams().set('eventoId', eventoId);
-    return this.http.get<ComissaoEvento[]>(this.baseUrl, { params });
+    return this.http.get<ComissaoEvento[]>(this.apiUrl, { params });
   }
 
   /**
    * Obtém uma comissão-evento específica.
    */
   obter(id: string): Observable<ComissaoEvento> {
-    return this.http.get<ComissaoEvento>(`${this.baseUrl}/${id}`);
+    return this.http.get<ComissaoEvento>(`${this.apiUrl}/${id}`);
   }
 
   /**
@@ -42,7 +43,7 @@ export class ComissaoEventoService {
     comissaoIds: string[];
     coordenadores?: { comissaoId: string; usuarioId: string }[];
   }): Observable<void> {
-    return this.http.post<void>(this.baseUrl, payload);
+    return this.http.post<void>(this.apiUrl, payload);
   }
 
   /**
@@ -50,7 +51,7 @@ export class ComissaoEventoService {
    * PUT /api/comissoes-evento/{id}/coordenador  { usuarioId: string | null }
    */
   atualizarCoordenador(comissaoEventoId: string, usuarioId: string | null): Observable<void> {
-    return this.http.put<void>(`${this.baseUrl}/${comissaoEventoId}/coordenador`, { usuarioId });
+    return this.http.put<void>(`${this.apiUrl}/${comissaoEventoId}/coordenador`, { usuarioId });
   }
 
   /**
@@ -58,13 +59,13 @@ export class ComissaoEventoService {
    * Ajuste o tipo do payload conforme seu DTO backend.
    */
   atualizar(comissaoEventoId: string, payload: Partial<ComissaoEvento>): Observable<void> {
-    return this.http.put<void>(`${this.baseUrl}/${comissaoEventoId}`, payload);
+    return this.http.put<void>(`${this.apiUrl}/${comissaoEventoId}`, payload);
   }
 
   /**
    * Exclui a comissão vinculada ao evento.
    */
   excluir(comissaoEventoId: string): Observable<void> {
-    return this.http.delete<void>(`${this.baseUrl}/${comissaoEventoId}`);
+    return this.http.delete<void>(`${this.apiUrl}/${comissaoEventoId}`);
   }
 }

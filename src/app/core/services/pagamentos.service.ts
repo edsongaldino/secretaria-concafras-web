@@ -9,7 +9,7 @@ import { PagamentoCreateResultDto } from '../models/pagamento.model';
 })
 export class PagamentoService {
 
-  private readonly apiUrl = '/api/inscricao';
+  private readonly apiUrl = `${environment.apiUrl}/inscricao`;
 
   constructor(private http: HttpClient) {} 
 

@@ -9,7 +9,7 @@ import { isPlatformBrowser } from '@angular/common';
 })
 export class AuthService {
  
-  private readonly apiUrl = '/api/auth';
+  private readonly apiUrl = `${environment.apiUrl}/api/auth`;
 
   constructor(
     private http: HttpClient,

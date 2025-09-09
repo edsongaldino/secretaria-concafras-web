@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { Evento } from '../models/evento.model';
 import { Comissao } from '../models/comissao.model';
 import { Curso } from '../models/curso.model';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
@@ -11,7 +12,7 @@ import { Curso } from '../models/curso.model';
 
 export class EventoService {
 
-  private readonly apiUrl = '/api/evento';
+  private readonly apiUrl = `${environment.apiUrl}/evento`;
 
   constructor(private http: HttpClient) {}
 

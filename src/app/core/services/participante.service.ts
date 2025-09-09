@@ -9,7 +9,8 @@ import { Participante } from '../models/participante.model';
 })
 
 export class ParticipanteService {
-  private readonly apiUrl = '/api/participantes';
+  
+  private readonly apiUrl = `${environment.apiUrl}/participantes`;
 
   constructor(private http: HttpClient) {}
 

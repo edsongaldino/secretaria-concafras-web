@@ -9,7 +9,7 @@ import { Inscricao, ListaInscricoesDto } from '../models/inscricao.model';
 })
 export class InscricaoService {
 
-  private readonly apiUrl = '/api/inscricao';
+  private readonly apiUrl = `${environment.apiUrl}/inscricao`;
 
   constructor(private http: HttpClient) {}
 
