@@ -5,7 +5,6 @@ import { bootstrapApplication } from '@angular/platform-browser';
 import { AppComponent } from './app/app';
 
 import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
-import { apiPrefixInterceptor } from './app/core/interceptors/api-prefix.interceptor';
 
 // Se você usa rotas:
 import { provideRouter } from '@angular/router';
@@ -14,7 +13,7 @@ import { provideNgxMask } from 'ngx-mask';
 
 bootstrapApplication(AppComponent, {
   providers: [
-    provideHttpClient(withFetch(), withInterceptors([apiPrefixInterceptor])),
+    provideHttpClient(withFetch()),
     provideRouter(appRoutes), // remova se você NÃO usa rotas
     provideNgxMask({                                        // <<<
       validation: true,
