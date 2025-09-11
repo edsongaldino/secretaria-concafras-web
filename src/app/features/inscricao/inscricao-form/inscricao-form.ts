@@ -323,6 +323,7 @@ export class InscricaoForm implements OnInit {
         this.participanteService.criarOuObterPorCpf({
           nome: dados.nome,
           cpf: dados.cpf,
+          dataNascimento: dados.dataNascimento,
           email: dados.email,
           telefone: dados.telefone,
           instituicao: dados.instituicao,

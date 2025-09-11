@@ -4,6 +4,7 @@ export interface Participante {
   id?: string;
   nome: string;
   cpf: string;
+  dataNascimento: string;
   email: string;
   telefone?: string;
   instituicao?: string;
