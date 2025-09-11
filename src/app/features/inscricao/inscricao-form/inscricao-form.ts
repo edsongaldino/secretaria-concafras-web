@@ -323,7 +323,7 @@ export class InscricaoForm implements OnInit {
         this.participanteService.criarOuObterPorCpf({
           nome: dados.nome,
           cpf: dados.cpf,
-          dataNascimento: dados.dataNascimento,
+          dataNascimento: this.toDateOnly(dados.dataNascimento),
           email: dados.email,
           telefone: dados.telefone,
           instituicao: dados.instituicao,
@@ -442,4 +442,10 @@ export class InscricaoForm implements OnInit {
   private toNull<T>(v: T | '' | undefined | null): T | null {
     return v === '' || v === undefined || v === null ? null : v;
   }
+
+  private toDateOnly(d: Date) {
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  }
+
 }
