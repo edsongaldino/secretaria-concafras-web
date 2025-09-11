@@ -14,9 +14,16 @@ export class PagamentoService {
   constructor(private http: HttpClient) {} 
 
   criarCheckoutGrupo(eventoId: string, responsavelId: string) {
+    console.log(eventoId, responsavelId);
     return this.http.post<PagamentoCreateResultDto>(`${this.apiUrl}/checkout/grupo`, {
       eventoId, responsavelFinanceiroId: responsavelId
     });
+  }
+
+  obterStatus(pagamentoId: string) {
+    return this.http.get<{ pagamentoId: string; status: string; itens: { inscricaoId: string }[] }>(
+      `${this.apiUrl}/status/${pagamentoId}`
+    );
   }
 
 }

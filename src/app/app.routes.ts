@@ -7,6 +7,7 @@ import { InscricaoForm } from './features/inscricao/inscricao-form/inscricao-for
 import { EventoListComponent } from './features/eventos/evento-list/evento-list';
 import { EventoFormComponent } from './features/eventos/evento-form/evento-form';
 import { InscricaoList } from './features/inscricao/inscricao-list/inscricao-list';
+import { PagamentoRetornoComponent } from './features/inscricao/inscricao-retorno-pagamento/inscricao-retorno-pagamento';
 
 export const appRoutes: Routes = [
   { path: '', redirectTo: '/login', pathMatch: 'full' },
@@ -19,5 +20,8 @@ export const appRoutes: Routes = [
   { path: 'eventos/novo', component: EventoFormComponent },
   { path: 'eventos/editar/:id', component: EventoFormComponent },
   { path: 'eventos/:eventoId/inscricoes/:participanteId', component: InscricaoList },
-  { path: 'eventos/:eventoId/inscricao/nova/:responsavelId', component: InscricaoForm }
+  { path: 'eventos/:eventoId/inscricao/nova/:responsavelId', component: InscricaoForm },
+  { path: 'pagamento/sucesso',  component: PagamentoRetornoComponent },
+  { path: 'pagamento/pendente', component: PagamentoRetornoComponent },
+  { path: 'pagamento/erro',     component: PagamentoRetornoComponent },
 ];

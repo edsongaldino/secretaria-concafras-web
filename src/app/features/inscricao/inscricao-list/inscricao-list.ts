@@ -9,6 +9,8 @@ import { ListaInscricoesDto } from '../../../core/models/inscricao.model';
 import { EventoService } from '../../../core/services/evento.service';
 import { PagamentoService } from '../../../core/services/pagamentos.service';
 import { Evento } from '../../../core/models/evento.model';
+import { finalize } from 'rxjs/operators';
+import { NotificationService } from '../../../core/services/notification.service';
 
 @Component({
   selector: 'app-inscricao-list',
@@ -26,6 +28,7 @@ export class InscricaoList implements OnInit {
   responsavelId!: string;
   participanteId!: string;
   evento?: Evento;
+  loadingPagar = false;
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 
@@ -33,7 +36,8 @@ export class InscricaoList implements OnInit {
     private inscricaoService: InscricaoService, 
     private router: Router,
     private eventoService: EventoService,
-    private pagamento: PagamentoService
+    private pagamentoService: PagamentoService,
+    private notify: NotificationService
   ) {}
 
   ngOnInit(): void {
@@ -82,7 +86,26 @@ export class InscricaoList implements OnInit {
   }
 
   finalizarInscricao() {
-    this.pagamento.criarCheckoutGrupo(this.eventoId, this.responsavelId).subscribe(r => { if (r.checkoutUrl) window.location.href = r.checkoutUrl; });
+    if (this.loadingPagar) return;
+    this.loadingPagar = true;
+
+    this.pagamentoService.criarCheckoutGrupo(this.eventoId, this.responsavelId)
+      .pipe(finalize(() => (this.loadingPagar = false)))
+      .subscribe({
+        next: res => {
+          if (res.checkoutUrl) {
+            // abre o checkout
+            window.location.href = res.checkoutUrl;
+          } else {
+            // nenhum item elegível
+            this.notify.errorCenter('Sem inscrições elegíveis', res.mensagem ?? '');
+          }
+        },
+        error: _ => {
+          // seus erros já são tratados pelo ApiErrorInterceptor;
+          // aqui, no máximo, você pode reabilitar o botão
+        }
+      });
   }
 
   
