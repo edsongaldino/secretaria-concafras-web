@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://api.inscribo.com.br'
+  apiUrl: 'https://api.inscribo.com.br/api'
 };
