@@ -24,24 +24,29 @@
 
   <table mat-table [dataSource]="dataSource" class="mat-elevation-z8">
 
-    <ng-container matColumnDef="nome">
+    <ng-container matColumnDef="dataInscricao">
+      <th mat-header-cell *matHeaderCellDef> Valor Inscrição </th>
+      <td mat-cell *matCellDef="let inscricao">{{ inscricao.dataInscricao | date:'shortDate' }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="participanteNome">
       <th mat-header-cell *matHeaderCellDef> Nome </th>
       <td mat-cell *matCellDef="let inscricao">{{ inscricao.participanteNome }}</td>
     </ng-container>
 
-    <ng-container matColumnDef="cpf">
-      <th mat-header-cell *matHeaderCellDef> CPF </th>
-      <td mat-cell *matCellDef="let inscricao">{{ inscricao.cpf }}</td>
+    <ng-container matColumnDef="participanteDataNascimento">
+      <th mat-header-cell *matHeaderCellDef> Data Nascimento </th>
+      <td mat-cell *matCellDef="let inscricao">{{ inscricao.participanteDataNascimento }}</td>
     </ng-container>
 
-    <ng-container matColumnDef="email">
-      <th mat-header-cell *matHeaderCellDef> E-mail </th>
-      <td mat-cell *matCellDef="let inscricao">{{ inscricao.email }}</td>
+    <ng-container matColumnDef="participanteIdade">
+      <th mat-header-cell *matHeaderCellDef> Idade (No dia do Evento) </th>
+      <td mat-cell *matCellDef="let inscricao">{{ inscricao.participanteIdade }}</td>
     </ng-container>
 
-    <ng-container matColumnDef="dataInscricao">
-      <th mat-header-cell *matHeaderCellDef> Data </th>
-      <td mat-cell *matCellDef="let inscricao">{{ inscricao.dataInscricao | date:'shortDate' }}</td>
+    <ng-container matColumnDef="valorInscricao">
+      <th mat-header-cell *matHeaderCellDef> Valor Inscrição </th>
+      <td mat-cell *matCellDef="let inscricao">{{ inscricao.valorInscricao | date:'shortDate' }}</td>
     </ng-container>
 
     <ng-container matColumnDef="status">

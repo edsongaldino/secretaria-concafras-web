@@ -15,5 +15,9 @@ export interface ListaInscricoesDto {
   dataInscricao: string;
   temaAtual: string;
   temaEspecifico: string;
+  participanteNome: string;
+  participanteDataNascimento:string;
+  participanteIdade:string;
+  valorInscricao: string;
   trabalhador: boolean;
 }
