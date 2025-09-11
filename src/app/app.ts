@@ -1,10 +1,11 @@
 import { Component } from '@angular/core';
-import { RouterModule } from '@angular/router';  // Se precisar de rotas
+import { RouterOutlet } from '@angular/router';
+import { HeaderComponent } from "./shared/header/header";  // Se precisar de rotas
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterModule], // Adiciona dependências diretamente no componente
+  imports: [RouterOutlet, HeaderComponent], // Adiciona dependências diretamente no componente
   templateUrl: './app.html',
   styleUrls: ['./app.scss']
 })

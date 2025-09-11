@@ -1,52 +1,50 @@
 <div class="endereco-form" [formGroup]="formGroup">
-  <div class="row mb-3">
-    <!-- CEP -->
-    <div class="col-12 col-md-4">
-      <mat-form-field appearance="outline" class="w-100">
+
+  <!-- CEP | Número | Complemento -->
+  <div class="form-grid grid-3">
+    <div>
+      <mat-form-field appearance="outline">
         <mat-label>CEP</mat-label>
         <input matInput formControlName="cep" (blur)="buscarCep()" placeholder="Digite o CEP" />
       </mat-form-field>
     </div>
 
-    <!-- Número -->
-    <div class="col-12 col-md-4">
-      <mat-form-field appearance="outline" class="w-100">
+    <div>
+      <mat-form-field appearance="outline">
         <mat-label>Número</mat-label>
         <input matInput formControlName="numero" />
       </mat-form-field>
     </div>
 
-    <!-- Complemento -->
-    <div class="col-12 col-md-4">
-      <mat-form-field appearance="outline" class="w-100">
+    <div>
+      <mat-form-field appearance="outline">
         <mat-label>Complemento</mat-label>
         <input matInput formControlName="complemento" />
       </mat-form-field>
     </div>
   </div>
 
-  <div class="row mb-3">
-    <!-- Logradouro -->
-    <div class="col-12 col-md-8">
-      <mat-form-field appearance="outline" class="w-100">
+  <!-- Logradouro (2 colunas) | Bairro (1 coluna) -->
+  <div class="form-grid grid-3">
+    <div class="span-2">
+      <mat-form-field appearance="outline">
         <mat-label>Logradouro</mat-label>
         <input matInput formControlName="logradouro" />
       </mat-form-field>
     </div>
 
-    <!-- Bairro -->
-    <div class="col-12 col-md-4">
-      <mat-form-field appearance="outline" class="w-100">
+    <div>
+      <mat-form-field appearance="outline">
         <mat-label>Bairro</mat-label>
         <input matInput formControlName="bairro" />
       </mat-form-field>
     </div>
   </div>
 
-  <div class="row mb-3">
-    <!-- Estado -->
-    <div class="col-12 col-md-6">
-      <mat-form-field appearance="outline" class="w-100">
+  <!-- Estado | Cidade -->
+  <div class="form-grid grid-2">
+    <div>
+      <mat-form-field appearance="outline">
         <mat-label>Estado</mat-label>
         <mat-select formControlName="estado" (selectionChange)="carregarCidades()">
           <mat-option value="">Selecione</mat-option>
@@ -57,9 +55,8 @@
       </mat-form-field>
     </div>
 
-    <!-- Cidade -->
-    <div class="col-12 col-md-6">
-      <mat-form-field appearance="outline" class="w-100">
+    <div>
+      <mat-form-field appearance="outline">
         <mat-label>Cidade</mat-label>
         <mat-select formControlName="cidade">
           <mat-option value="">Selecione</mat-option>
@@ -70,4 +67,5 @@
       </mat-form-field>
     </div>
   </div>
+
 </div>

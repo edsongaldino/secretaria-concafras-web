@@ -1,10 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, DestroyRef } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 
-import { catchError, forkJoin, of, firstValueFrom } from 'rxjs';
-import { distinctUntilChanged, startWith, switchMap, tap } from 'rxjs/operators';
+import { combineLatest, forkJoin, of, firstValueFrom } from 'rxjs';
+import { catchError, distinctUntilChanged, startWith, switchMap, tap } from 'rxjs/operators';
 
 import { MaterialModule } from '../../../shared/material.module';
 import { EnderecoComponent } from '../../../shared/components/endereco/endereco';
@@ -14,12 +14,13 @@ import { EventoService } from '../../../core/services/evento.service';
 import { ParticipanteService } from '../../../core/services/participante.service';
 import { InscricaoService } from '../../../core/services/inscricao.service';
 import { CursoService } from '../../../core/services/curso.service';
+import { ComissaoEventoService } from '../../../core/services/comissao-evento.service';
+import { NotificationService } from '../../../core/services/notification.service';
 
 import { Evento } from '../../../core/models/evento.model';
-import { ComissaoEventoService } from '../../../core/services/comissao-evento.service';
-import { Router } from '@angular/router';
+
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import Swal from 'sweetalert2';
-import { NotificationService } from '../../../core/services/notification.service';
 
 type Publico = 'Crianca' | 'Jovem' | 'Adulto';
 
@@ -43,6 +44,7 @@ export class InscricaoForm implements OnInit {
   cursosTemaEspecifico: any[] = [];
   comissoes: any[] = [];
   responsavelId!: string;
+  isLoadingCursos = false;
 
   constructor(
     private route: ActivatedRoute,
@@ -53,7 +55,8 @@ export class InscricaoForm implements OnInit {
     private cursoService: CursoService,
     private comissaoEventoService: ComissaoEventoService,
     private router: Router,
-    private notify: NotificationService
+    private notify: NotificationService,
+    private destroyRef: DestroyRef
   ) {}
 
   ngOnInit(): void {
@@ -67,9 +70,10 @@ export class InscricaoForm implements OnInit {
       return;
     }
 
+    // Reage à mudança de público para ligar/desligar "responsável"
     this.form.get('publico')?.valueChanges
-    .pipe(startWith(this.form.get('publico')?.value))
-    .subscribe((pub: string) => this.toggleResponsavel(pub));
+      .pipe(startWith(this.form.get('publico')?.value))
+      .subscribe((pub: string) => this.toggleResponsavel(pub));
 
     // Preenche o form com o id do evento e trava edição
     this.form.patchValue({ eventoId });
@@ -80,31 +84,85 @@ export class InscricaoForm implements OnInit {
       .pipe(distinctUntilChanged())
       .subscribe((val: string) => this.definirPublicoPeloEvento(val));
 
-    // Carrega evento; depois comissões e cursos em paralelo
+    // 1) Carrega o evento
     this.eventoService.obterPorId(eventoId)
       .pipe(
         tap((evento) => {
           this.evento = evento;
-
           // Se já tinha data preenchida, garante cálculo
           const dn = this.form.get('dataNascimento')?.value as string | null;
           if (dn) this.definirPublicoPeloEvento(dn);
         }),
+        // 2) Carrega comissões (cursos ficam reativos abaixo)
         switchMap(() =>
-          forkJoin({
-            comissoes: this.comissaoEventoService.listarPorEvento(eventoId).pipe(catchError(() => of([]))),
-            atuais: this.cursoService.listarPorEvento(eventoId).pipe(catchError(() => of([])))
-          })
+          this.comissaoEventoService
+            .listarPorEvento(eventoId)
+            .pipe(catchError(() => of([])))
         )
       )
       .subscribe({
-        next: ({ comissoes, atuais }) => {
+        next: (comissoes) => {
           this.comissoes = comissoes;
-          this.cursosTemaAtual = atuais;
-          this.cursosTemaEspecifico = atuais; // ajuste quando tiver endpoint específico
+          // 3) Só depois de ter evento e form prontos, ligo o auto-refresh dos cursos
+          this.setupAutoRefreshCursos();
         },
-        error: (err) => console.error('Erro ao carregar dados da inscrição', err)
+        error: (err) => console.error('Erro ao carregar dados do evento/comissões', err)
       });
+  }
+
+  /** Atualiza cursos sempre que público / neófito / trabalhador mudarem. */
+  private setupAutoRefreshCursos() {
+    const publico$    = this.form.get('publico')!.valueChanges.pipe(startWith(this.form.get('publico')!.value));
+    const neofito$    = this.form.get('neofito')!.valueChanges.pipe(startWith(this.form.get('neofito')!.value));
+    const trabalhador$= this.form.get('trabalhador')!.valueChanges.pipe(startWith(this.form.get('trabalhador')!.value));
+
+    combineLatest([publico$, neofito$, trabalhador$])
+      .pipe(
+        switchMap(([publico, neofito, trabalhador]) => {
+          // Se estiver em "trabalhador", limpa cursos e não busca
+          if (trabalhador === true) {
+            this.cursosTemaAtual = [];
+            this.cursosTemaEspecifico = [];
+            this.form.patchValue({ cursoTemaAtualId: null, cursoTemaEspecificoId: null }, { emitEvent: false });
+            return of({ atual: [], espec: [] });
+          }
+
+          if (!this.evento?.id) return of({ atual: [], espec: [] });
+
+          this.isLoadingCursos = true;
+
+          const filtrosBase: { publico?: string; neofito?: boolean | null } = {
+            publico: publico || undefined,
+            neofito: neofito ?? null   // null => não filtra
+          };
+
+          return forkJoin({
+            atual: this.cursoService
+              .listarPorEvento(this.evento.id, { ...filtrosBase, bloco: 'TemaAtual' })
+              .pipe(catchError(() => of([]))),
+            espec: this.cursoService
+              .listarPorEvento(this.evento.id, { ...filtrosBase, bloco: 'TemaEspecifico' })
+              .pipe(catchError(() => of([])))
+          });
+        }),
+        tap(() => (this.isLoadingCursos = false)),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe(({ atual, espec }) => {
+        this.cursosTemaAtual = atual;
+        this.cursosTemaEspecifico = espec;
+        // Se a opção selecionada saiu da lista após o filtro, zera o control
+        this.ensureInOptions('cursoTemaAtualId', this.cursosTemaAtual);
+        this.ensureInOptions('cursoTemaEspecificoId', this.cursosTemaEspecifico);
+      });
+  }
+
+  private ensureInOptions(controlName: string, options: { id: any }[]) {
+    const ctrl = this.form.get(controlName)!;
+    const val = ctrl.value;
+    if (!val) return;
+    const exists = options.some(o => o.id === val);
+    if (!exists) ctrl.patchValue(null, { emitEvent: false });
   }
 
   inicializarForm(): void {
@@ -118,10 +176,10 @@ export class InscricaoForm implements OnInit {
       telefone: [''],
       instituicao: [''],
       trabalhador: [false],
-      neofito: [true],
-      cursoTemaAtualId: [''],
-      cursoTemaEspecificoId: [''],
-      comissaoId: [''],
+      neofito: [null], // null => não filtra; mude para true/false se quiser filtro padrão
+      cursoTemaAtualId: [null],
+      cursoTemaEspecificoId: [null],
+      comissaoId: [null],
       responsavel: this.fb.group({
         nome: [''],
         cpf: [''],
@@ -145,20 +203,16 @@ export class InscricaoForm implements OnInit {
   }
 
   get bannerStyle(): string {
-    const fallback = '/img/banner-inscricao.jpg'; // <- barra no começo!
+    const fallback = '/img/banner-inscricao.jpg';
     const raw = (this.evento?.bannerUrl || '').trim();
     if (!raw) return `url('${fallback}')`;
     const safe = raw.replace(/'/g, "\\'");
-    // tenta o banner do evento; se falhar o download, o fallback aparece
     return `url('${safe}'), url('${fallback}')`;
   }
-
-
 
   // ================== LÓGICA DE PÚBLICO ==================
 
   private toLocalDate(y: number, m: number, d: number): Date {
-    // cria Date sem fuso/horário (meia-noite local)
     return new Date(y, m, d);
   }
 
@@ -172,19 +226,15 @@ export class InscricaoForm implements OnInit {
 
     const raw = String(input).trim();
 
-    // dd/MM/yyyy
     let m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(raw);
     if (m) return this.toLocalDate(+m[3], +m[2] - 1, +m[1]);
 
-    // ddMMyyyy
     m = /^(\d{2})(\d{2})(\d{4})$/.exec(raw);
     if (m) return this.toLocalDate(+m[3], +m[2] - 1, +m[1]);
 
-    // yyyy-MM-dd
     m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(raw);
     if (m) return this.toLocalDate(+m[1], +m[2] - 1, +m[3]);
 
-    // yyyy-MM-ddTHH:mm:ss(Z|.xxxZ) -> usa só a parte da data, ignora fuso
     m = /^(\d{4})-(\d{2})-(\d{2})T/.exec(raw);
     if (m) return this.toLocalDate(+m[1], +m[2] - 1, +m[3]);
 
@@ -195,7 +245,6 @@ export class InscricaoForm implements OnInit {
 
   private obterDataInicioEvento(): Date | null {
     if (!this.evento) return null;
-    // 🔧 ajuste o nome exato do campo, se necessário
     const raw: string | Date | undefined =
       (this.evento as any).dataInicio ??
       (this.evento as any).dataInicial ??
@@ -207,7 +256,7 @@ export class InscricaoForm implements OnInit {
     const y = base.getFullYear() - nasc.getFullYear();
     const m = base.getMonth() - nasc.getMonth();
     let meses = y * 12 + m;
-    if (base.getDate() < nasc.getDate()) meses -= 1; // ainda não fez “mesversário”
+    if (base.getDate() < nasc.getDate()) meses -= 1;
     return meses;
   }
 
@@ -238,14 +287,12 @@ export class InscricaoForm implements OnInit {
     const isCrianca = pub === 'Crianca';
 
     if (isCrianca) {
-      // habilita e exige o básico
       grp.enable({ emitEvent: false });
       nome.setValidators([Validators.required]);
       cpf.setValidators([Validators.required]);
-      telefone.setValidators([]); 
+      telefone.setValidators([]);
       parentesco.setValidators([]);
     } else {
-      // limpa e desliga tudo quando NÃO for criança
       grp.reset({}, { emitEvent: false });
       grp.disable({ emitEvent: false });
       nome.clearValidators();
@@ -269,7 +316,6 @@ export class InscricaoForm implements OnInit {
   async salvar(): Promise<void> {
     if (this.form.invalid) return;
 
-    // eventoId está desabilitado -> use getRawValue
     const dados = this.form.getRawValue();
 
     try {
@@ -285,11 +331,11 @@ export class InscricaoForm implements OnInit {
       );
 
       if (!participante?.id) {
-        Swal.fire({
+        await Swal.fire({
           icon: 'error',
           title: 'Erro ao salvar!',
           text: 'Participante não encontrado ou não pôde ser criado.',
-          confirmButtonText: 'Tentar novamente'
+          confirmButtonText: 'Ok'
         });
         return;
       }
@@ -303,23 +349,93 @@ export class InscricaoForm implements OnInit {
         comissaoId: this.toNull(dados.comissaoId)
       }));
 
-      // pegue do retorno se existir (preferível); senão, use o fallback local
       const eventoId = (res as any)?.eventoId ?? dados.eventoId;
       const responsavelId =
         (res as any)?.responsavelFinanceiroId ??
         this.responsavelId ??
         participante.id;
 
+      await Swal.fire({
+        icon: 'success',
+        title: 'Inscrição concluída!',
+        text: 'Na próxima tela você pode efetuar o pagamento ou incluir mais inscrições.',
+        confirmButtonText: 'Continuar'
+      });
 
-      this.notify.successCenterRedirect(
-        'Inscrição concluída!',
-        'Na próxima tela você pode efetuar o pagamento ou incluir mais inscrições.',
-        ['/eventos', eventoId, 'inscricoes', responsavelId]
-      );
+      this.router.navigate(['/eventos', eventoId, 'inscricoes', responsavelId]);
 
-    } catch (err) {
-      this.notify.errorCenter('Erro ao salvar!!', 'Não foi possível concluir sua inscrição.');
+    } catch (err: any) {
+      const { icon, title, html, errorsObj } = this.extractProblem(err);
+
+      await Swal.fire({
+        icon,
+        title,
+        html,
+        confirmButtonText: 'Ok',
+        width: 520,
+        allowOutsideClick: false
+      });
+
+      // (Opcional) marca os controles com erro do servidor para aparecer <mat-error>
+      if (errorsObj) {
+        Object.keys(errorsObj).forEach(k => {
+          const ctrl = this.form.get(this.mapServerFieldToForm(k));
+          if (ctrl) ctrl.setErrors({ server: (errorsObj[k] ?? []).join(' ') });
+        });
+      }
     }
+  }
+
+  /** Lê ProblemDetails da API e prepara conteúdo para o SweetAlert */
+  private extractProblem(err: any): { icon: 'error'|'warning'; title: string; html?: string; errorsObj?: Record<string, string[]> } {
+    const payload: any = err?.error ?? err ?? {};
+    const status: number | undefined = payload?.status ?? err?.status;
+
+    const icon: 'error'|'warning' = status === 409 ? 'warning' : 'error';
+    const title =
+      payload?.title ||
+      payload?.message ||
+      (status === 0 ? 'Falha de conexão.' : 'Não foi possível concluir a operação.');
+
+    const errorsObj = payload?.errors as Record<string, string[]> | undefined;
+
+    let html: string | undefined;
+    if (errorsObj && typeof errorsObj === 'object') {
+      const itens: string[] = [];
+      for (const [campo, msgs] of Object.entries(errorsObj)) {
+        (msgs || []).forEach(m => {
+          const label = campo
+            .replace(/Id$/,'')
+            .replace(/([A-Z])/g,' $1')
+            .trim();
+          itens.push(`<li><strong>${this.escapeHtml(label)}:</strong> ${this.escapeHtml(m)}</li>`);
+        });
+      }
+      if (itens.length) {
+        html = `<ul style="text-align:left;margin:0;padding-left:1.1rem">${itens.join('')}</ul>`;
+      }
+    } else if (payload?.detail) {
+      html = `<p style="text-align:left;margin:0">${this.escapeHtml(payload.detail)}</p>`;
+    }
+
+    return { icon, title, html, errorsObj };
+  }
+
+  private escapeHtml(s: string): string {
+    return String(s).replace(/[&<>"']/g, ch =>
+      ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' } as any)[ch]
+    );
+  }
+
+  /** Mapeia nomes de campos do backend -> nomes dos FormControls */
+  private mapServerFieldToForm(k: string): string {
+    const map: Record<string, string> = {
+      EventoId: 'eventoId',
+      ParticipanteId: 'participanteId',
+      CursoOuComissao: 'cursoTemaAtualId' // ajuste se quiser marcar outro control
+    };
+    // fallback: tenta camelCase
+    return map[k] ?? (k ? k.charAt(0).toLowerCase() + k.slice(1) : k);
   }
 
   private toNull<T>(v: T | '' | undefined | null): T | null {

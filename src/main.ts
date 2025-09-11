@@ -4,7 +4,7 @@ import 'zone.js'; // tem que ser a PRIMEIRA importação
 import { bootstrapApplication } from '@angular/platform-browser';
 import { AppComponent } from './app/app';
 
-import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
+import { provideHttpClient, withFetch } from '@angular/common/http';
 
 // Se você usa rotas:
 import { provideRouter } from '@angular/router';

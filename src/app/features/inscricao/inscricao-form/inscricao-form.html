@@ -1,5 +1,4 @@
 <!-- Banner do evento -->
-<!-- no template -->
 <div class="banner" [style.background-image]="bannerStyle">
   <div class="banner-overlay">
     <div class="banner-content">
@@ -14,188 +13,187 @@
   </div>
 </div>
 
-
 <!-- Ficha de Inscrição -->
-<div class="form-wrapper">
-  <h2 class="mat-headline text-center mb-4">Nova Inscrição</h2>
+<div class="container">
+  <div class="form-wrapper">
+    <h2 class="mat-headline text-center mb-4">Nova Inscrição</h2>
 
-  <form *ngIf="evento" [formGroup]="form" (ngSubmit)="salvar()">
+    <form *ngIf="evento" [formGroup]="form" (ngSubmit)="salvar()">
 
-    <h3 class="mat-subheading-2 mt-4">Dados do Participante</h3>
+      <h3 class="mat-subheading-2 mt-4">Dados do Participante</h3>
 
-    <div class="row">
-
-       <div class="col-12 col-md-4">
-        <mat-form-field appearance="outline" class="w-100">
-          <mat-label>CPF</mat-label>
-          <input matInput formControlName="cpf" mask="000.000.000-00" required />
-        </mat-form-field>
-      </div>
-      
-      <div class="col-12 col-md-8">
-        <mat-form-field appearance="outline" class="w-100">
-          <mat-label>Nome</mat-label>
-          <input matInput formControlName="nome" required />
-        </mat-form-field>
-      </div>
-
-    </div>
-
-    <div class="row">
-
-       <div class="col-12 col-md-4">
-        <mat-form-field appearance="outline" class="w-100">
-          <mat-label>Data de Nascimento</mat-label>
-          <input matInput formControlName="dataNascimento" mask="00/00/0000" placeholder="dd/mm/aaaa" [dropSpecialCharacters]="false" required />
-        </mat-form-field>
-      </div>
-
-      <div class="col-12 col-md-4">
-        <mat-form-field appearance="outline" class="w-100">
-          <mat-label>Público</mat-label>
-          <mat-select formControlName="publico">
-            <mat-option value="Crianca">Criança</mat-option>
-            <mat-option value="Jovem">Jovem</mat-option>
-            <mat-option value="Adulto">Adulto</mat-option>
-          </mat-select>
-        </mat-form-field>
-      </div>
-      
-    </div>
-
-    <div class="row">
-      <div class="col-12 col-md-7">
-        <mat-form-field appearance="outline" class="w-100">
-          <mat-label>E-mail</mat-label>
-          <input matInput type="email" formControlName="email" required />
-        </mat-form-field>
-      </div>
-
-      <div class="col-12 col-md-5">
-        <mat-form-field appearance="outline" class="w-100">
-          <mat-label>Telefone</mat-label>
-          <input matInput formControlName="telefone" mask="(00) 00000-0000" />
-        </mat-form-field>
-      </div>
-    </div>
-
-    <div class="row">
-      <div class="col-12">
-        <mat-form-field appearance="outline" class="w-100">
-          <mat-label>Instituição</mat-label>
-          <input matInput formControlName="instituicao" />
-        </mat-form-field>
-      </div>
-    </div>
-    
-
-    <div *ngIf="isCrianca" formGroupName="responsavel">
-      <h3>Dados do Responsável</h3>
-
-      <div class="row">
-
-        <div class="col-12 col-md-4">
-          <mat-form-field appearance="outline" class="w-100">
+      <!-- CPF (1 col) | Nome (2 cols) em >= md -->
+      <div class="form-grid grid-3">
+        <div>
+          <mat-form-field appearance="outline">
             <mat-label>CPF</mat-label>
             <input matInput formControlName="cpf" mask="000.000.000-00" required />
           </mat-form-field>
         </div>
-        
-        <div class="col-12 col-md-8">
-          <mat-form-field appearance="outline" class="w-100">
+        <div class="span-2">
+          <mat-form-field appearance="outline">
             <mat-label>Nome</mat-label>
             <input matInput formControlName="nome" required />
           </mat-form-field>
         </div>
-
       </div>
 
-      <div class="row">
+      <!-- Data Nasc | Público (2 cols) -->
+      <div class="form-grid grid-2">
+        <div>
+          <mat-form-field appearance="outline">
+            <mat-label>Data de Nascimento</mat-label>
+            <input matInput formControlName="dataNascimento"
+                  mask="00/00/0000" placeholder="dd/mm/aaaa" [dropSpecialCharacters]="false" required />
+          </mat-form-field>
+        </div>
 
-        <div class="col-12 col-md-4">
-          <mat-form-field appearance="outline" class="w-100">
+        <div>
+          <mat-form-field appearance="outline">
+            <mat-label>Público</mat-label>
+            <mat-select formControlName="publico">
+              <mat-option value="Crianca">Criança</mat-option>
+              <mat-option value="Jovem">Jovem</mat-option>
+              <mat-option value="Adulto">Adulto</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+      </div>
+
+      <!-- Email (7/12) | Telefone (5/12) ≈ 2:1 -->
+      <div class="form-grid grid-3">
+        <div class="span-2">
+          <mat-form-field appearance="outline">
+            <mat-label>E-mail</mat-label>
+            <input matInput type="email" formControlName="email" required />
+          </mat-form-field>
+        </div>
+        <div>
+          <mat-form-field appearance="outline">
             <mat-label>Telefone</mat-label>
-            <input matInput formControlName="telefone" mask="(00) 00000-0000" required="" />
-          </mat-form-field>
-        </div>
-        
-        <div class="col-12 col-md-8">
-          <mat-form-field appearance="outline" class="w-100">
-            <mat-label>Parentesco</mat-label>
-            <input matInput formControlName="parentesco" required />
-          </mat-form-field>
-        </div>
-
-      </div>
-
-    </div>
-
-    <h3 class="mat-subheading-2 mt-4">Endereço</h3>
-    <app-endereco [formGroup]="enderecoForm"></app-endereco>
-
-
-    <div class="row">
-      <div class="col-12 col-md-6">
-        <label id="trabalhador-label" class="mb-2 d-block">Tipo de inscrição</label>
-        <mat-radio-group formControlName="trabalhador">
-          <mat-radio-button [value]="false" class="me-4">Participante</mat-radio-button>
-          <mat-radio-button [value]="true">Trabalhador</mat-radio-button>
-        </mat-radio-group>
-      </div>
-
-      <div class="col-12 col-md-6" *ngIf="!form.get('trabalhador')?.value">
-        <label id="trabalhador-label" class="mb-2 d-block">Perfil do participante</label>
-        <mat-radio-group formControlName="neofito">
-          <mat-radio-button [value]="false" class="me-4">Iniciante</mat-radio-button>
-          <mat-radio-button [value]="true">Avançado</mat-radio-button>
-        </mat-radio-group>
-      </div>
-
-    </div>
-
-    <!-- Cursos -->
-    <div *ngIf="!form.get('trabalhador')?.value">
-      <h3 class="mat-subheading-2 mt-4">Cursos</h3>
-      <div class="row">
-        <div class="col-12 col-md-12">
-          <mat-form-field appearance="outline" class="w-100">
-            <mat-label>Curso Tema Atual</mat-label>
-            <mat-select formControlName="cursoTemaAtualId">
-              <mat-option *ngFor="let c of cursosTemaAtual" [value]="c.id">{{ c.titulo }}</mat-option>
-            </mat-select>
-          </mat-form-field>
-        </div>
-
-        <div class="col-12 col-md-12">
-          <mat-form-field appearance="outline" class="w-100">
-            <mat-label>Curso Tema Específico</mat-label>
-            <mat-select formControlName="cursoTemaEspecificoId">
-              <mat-option *ngFor="let c of cursosTemaEspecifico" [value]="c.id">{{ c.titulo }}</mat-option>
-            </mat-select>
+            <input matInput formControlName="telefone" mask="(00) 00000-0000" />
           </mat-form-field>
         </div>
       </div>
-    </div>
 
-    <!-- Comissão -->
-    <div *ngIf="form.get('trabalhador')?.value">
-      <h3 class="mat-subheading-2 mt-4">Comissão de Trabalho</h3>
-      <div class="row">
-        <div class="col-12">
-          <mat-form-field appearance="outline" class="w-100">
-            <mat-label>Comissão</mat-label>
-            <mat-select formControlName="comissaoId">
-              <mat-option *ngFor="let c of comissoes" [value]="c.id">{{ c.nome }}</mat-option>
-            </mat-select>
+      <!-- Instituição (linha inteira) -->
+      <div class="form-grid">
+        <div>
+          <mat-form-field appearance="outline">
+            <mat-label>Instituição</mat-label>
+            <input matInput formControlName="instituicao" />
           </mat-form-field>
         </div>
       </div>
-    </div>
 
-    <div class="text-center mt-4">
-      <button mat-raised-button color="primary" type="submit" [disabled]="form.invalid">
-        Finalizar Inscrição
-      </button>
-    </div>
-  </form>
+      <!-- Dados do Responsável (quando criança) -->
+      <div *ngIf="isCrianca" formGroupName="responsavel">
+        <h3>Dados do Responsável</h3>
+
+        <!-- CPF (1) | Nome (2) -->
+        <div class="form-grid grid-3">
+          <div>
+            <mat-form-field appearance="outline">
+              <mat-label>CPF</mat-label>
+              <input matInput formControlName="cpf" mask="000.000.000-00" required />
+            </mat-form-field>
+          </div>
+          <div class="span-2">
+            <mat-form-field appearance="outline">
+              <mat-label>Nome</mat-label>
+              <input matInput formControlName="nome" required />
+            </mat-form-field>
+          </div>
+        </div>
+
+        <!-- Telefone (1) | Parentesco (2) -->
+        <div class="form-grid grid-3">
+          <div>
+            <mat-form-field appearance="outline">
+              <mat-label>Telefone</mat-label>
+              <input matInput formControlName="telefone" mask="(00) 00000-0000" required />
+            </mat-form-field>
+          </div>
+          <div class="span-2">
+            <mat-form-field appearance="outline">
+              <mat-label>Parentesco</mat-label>
+              <input matInput formControlName="parentesco" required />
+            </mat-form-field>
+          </div>
+        </div>
+      </div>
+
+      <h3 class="mat-subheading-2 mt-4">Endereço</h3>
+      <app-endereco [formGroup]="enderecoForm"></app-endereco>
+
+      <!-- Radios em 2 colunas no md -->
+      <div class="form-grid grid-2">
+        <div>
+          <label id="trabalhador-label" class="mb-2 d-block">Tipo de inscrição</label>
+          <mat-radio-group formControlName="trabalhador">
+            <mat-radio-button [value]="false" class="me-4">Participante</mat-radio-button>
+            <mat-radio-button [value]="true">Trabalhador</mat-radio-button>
+          </mat-radio-group>
+        </div>
+
+        <div *ngIf="!form.get('trabalhador')?.value">
+          <label class="mb-2 d-block">Perfil do participante</label>
+          <mat-radio-group formControlName="neofito">
+            <mat-radio-button [value]="false" class="me-4">Iniciante</mat-radio-button>
+            <mat-radio-button [value]="true">Avançado</mat-radio-button>
+          </mat-radio-group>
+        </div>
+      </div>
+
+      <!-- Cursos -->
+      <div *ngIf="!form.get('trabalhador')?.value">
+        <h3 class="mat-subheading-2 mt-4">Cursos</h3>
+
+        <div class="form-grid grid-2">
+          <div>
+            <mat-form-field appearance="outline">
+              <mat-label>Curso Tema Atual</mat-label>
+              <mat-select formControlName="cursoTemaAtualId" [disabled]="isLoadingCursos">
+                <mat-option *ngFor="let c of cursosTemaAtual" [value]="c.id">
+                  {{ c.titulo }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+
+          <div>
+            <mat-form-field appearance="outline">
+              <mat-label>Curso Tema Específico</mat-label>
+              <mat-select formControlName="cursoTemaEspecificoId" [disabled]="isLoadingCursos">
+                <mat-option *ngFor="let c of cursosTemaEspecifico" [value]="c.id">
+                  {{ c.titulo }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+        </div>
+      </div>
+
+      <!-- Comissão (quando trabalhador) -->
+      <div *ngIf="form.get('trabalhador')?.value">
+        <h3 class="mat-subheading-2 mt-4">Comissão de Trabalho</h3>
+        <div class="form-grid">
+          <div>
+            <mat-form-field appearance="outline">
+              <mat-label>Comissão</mat-label>
+              <mat-select formControlName="comissaoId">
+                <mat-option *ngFor="let c of comissoes" [value]="c.id">{{ c.nome }}</mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+        </div>
+      </div>
+
+      <div class="text-center mt-4">
+        <button mat-raised-button color="primary" type="submit" [disabled]="form.invalid">
+          Finalizar Inscrição
+        </button>
+      </div>
+    </form>
+  </div>
 </div>

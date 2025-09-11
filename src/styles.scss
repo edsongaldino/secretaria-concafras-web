@@ -6,6 +6,11 @@
 // custom components at https://material.angular.dev/guide/theming
 @use '@angular/material' as mat;
 
+mat-icon {
+  font-family: 'Material Icons' !important;
+  font-feature-settings: 'liga';
+}
+
 html {
   @include mat.theme((
     color: (
@@ -38,12 +43,68 @@ body {
 html, body { height: 100%; }
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
 
-.topo {
-  width: 100%;
-  height: 20px;
-  background-color: #000b79;
+.container {
+  max-width: 1024px;
+  margin: 0 auto;      /* centraliza horizontalmente */
+  padding: 0 16px;     /* respiro lateral em telas pequenas */
+  box-sizing: border-box;
 }
+
+.header-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  background-color: #fff;
+  border-bottom: 1px solid #ddd;
+}
+
+.header-left,
+.header-right {
+  flex: 1;
+  display: flex;
+  justify-content: flex-start;
+}
+
+.header-right {
+  justify-content: flex-end;
+}
+
+.header-center {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+}
+
+.logo {
+  max-height: 50px;
+}
+
 
 mat-form-field {
   width: 100%;
 }
+
+/* --- Grid utilitário (substitui row/col-*) --- */
+.form-grid { display: grid; gap: 16px; grid-template-columns: 1fr; }
+@media (min-width: 768px) {
+  .grid-2 { grid-template-columns: repeat(2, 1fr); }
+  .grid-3 { grid-template-columns: repeat(3, 1fr); }
+  .span-2 { grid-column: span 2; }
+  .span-3 { grid-column: span 3; }
+}
+
+/* utilitários simples (substituem classes do bootstrap usadas no HTML) */
+.mt-4 { margin-top: 1.5rem; }
+.mb-2 { margin-bottom: .5rem; }
+.mb-4 { margin-bottom: 1.5rem; }
+.text-center { text-align: center; }
+.d-block { display: block; }
+.me-4 { margin-right: 1rem; } /* usado nos radio buttons */
+
+mat-form-field { width: 100%; }
+
+/* banner (mantém o que você já tinha) */
+.banner { position: relative; background-size: cover; background-position: center; }
+.banner-overlay { background: rgba(0,0,0,.35); }
+.banner-content { color: #fff; padding: 2rem; text-align: center; }

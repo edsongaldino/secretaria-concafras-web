@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { Curso, Publico } from '../models/curso.model';
@@ -15,10 +15,14 @@ export class CursoService {
     return this.http.get<Curso[]>(this.apiUrl);
   }
 
-  listarPorEvento(eventoId: string, publico?: Publico, neofito?: boolean) {
-    const params: any = {};
-    if (publico) params.publico = publico;
-    if (neofito !== undefined) params.neofito = neofito;
+  listarPorEvento(
+    eventoId: string,
+    filtros: { publico?: string; bloco?: 'TemaAtual' | 'TemaEspecifico' | number; neofito?: boolean | null }
+  ): Observable<Curso[]> {
+    let params = new HttpParams();
+    if (filtros.publico) params = params.set('publico', filtros.publico);
+    if (filtros.bloco !== undefined && filtros.bloco !== null) params = params.set('bloco', String(filtros.bloco));
+    if (filtros.neofito !== undefined && filtros.neofito !== null) params = params.set('neofito', String(filtros.neofito));
     return this.http.get<Curso[]>(`${this.apiUrl}/obter-por-evento/${eventoId}`, { params });
   }
 

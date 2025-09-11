@@ -9,12 +9,12 @@ import { PagamentoCreateResultDto } from '../models/pagamento.model';
 })
 export class PagamentoService {
 
-  private readonly apiUrl = `${environment.apiUrl}/inscricao`;
+  private readonly apiUrl = `${environment.apiUrl}/pagamentos`;
 
   constructor(private http: HttpClient) {} 
 
   criarCheckoutGrupo(eventoId: string, responsavelId: string) {
-    return this.http.post<PagamentoCreateResultDto>('/api/pagamentos/grupo/checkout', {
+    return this.http.post<PagamentoCreateResultDto>(`${this.apiUrl}/grupo/checkout`, {
       eventoId, responsavelFinanceiroId: responsavelId
     });
   }

@@ -34,7 +34,6 @@
     "@angular/router": "20.2.1",
     "@angular/ssr": "20.2.1",
     "animate.css": "^4.1.1",
-    "bootstrap": "^5.3.7",
     "express": "^5.1.0",
     "ngx-mask": "^20.0.3",
     "rxjs": "~7.8.0",
