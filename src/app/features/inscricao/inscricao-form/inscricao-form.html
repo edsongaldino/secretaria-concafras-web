@@ -16,7 +16,9 @@
 <!-- Ficha de Inscrição -->
 <div class="container">
   <div class="form-wrapper">
-    <h2 class="mat-headline text-center mb-4">Nova Inscrição</h2>
+    <h2 class="mat-headline text-center mb-4">
+      {{ isEdit ? 'Editar Inscrição' : 'Nova Inscrição' }}
+    </h2>
 
     <form *ngIf="evento" [formGroup]="form" (ngSubmit)="salvar()">
 
@@ -191,7 +193,7 @@
 
       <div class="text-center mt-4">
         <button mat-raised-button color="primary" type="submit" [disabled]="form.invalid">
-          Finalizar Inscrição
+          {{ isEdit ? 'Salvar Alterações' : 'Finalizar Inscrição' }}
         </button>
       </div>
     </form>

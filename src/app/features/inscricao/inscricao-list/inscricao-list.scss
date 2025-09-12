@@ -24,20 +24,124 @@
   color: #fff;
 }
 
+/* topo: título à esquerda, botão SEMPRE à direita */
+.header-row {
+  display: grid;
+  grid-template-columns: 1fr auto; /* ocupa tudo + botão do lado direito */
+  align-items: center;
+  column-gap: 12px;
+  margin-bottom: 12px;
+}
+
+.header-title {
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis; /* se faltar espaço, o título encurta */
+}
+
 .minhas-inscricoes {
-  max-width: 980px;
+  max-width: 1200px;
   margin: 40px auto;
   background-color: #fff;
   padding: 32px;
   border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 10px rgba(0,0,0,.1);
+
+  /* padding adaptável */
+  padding: clamp(16px, 3vw, 32px);
+  margin: clamp(16px, 4vw, 40px) auto;
+  box-sizing: border-box;
 }
 
 .mat-form-field {
   margin-bottom: 16px;
+  width: 100%;
 }
 
-.pagamento-inscricao{
-    margin: 20px auto;
-    right: 0;
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;           /* (A) fallback: scroll horizontal se precisar */
+  -webkit-overflow-scrolling: touch;
 }
+
+/* ações compactas */
+.actions-cell { padding-right: 8px; }
+.actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  width: 100%;
+}
+
+/* deixa o mat-icon-button menor (MDC) */
+:host ::ng-deep .mat-mdc-icon-button.compact {
+  --mdc-icon-button-state-layer-size: 28px; /* padrão ~40px */
+  --mdc-icon-button-icon-size: 18px;        /* padrão 24px */
+  padding: 0;
+}
+
+/* botão/área de pagamento */
+.pagamento-inscricao {
+  margin: 20px auto 0;
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* ========================= */
+/* (B) MODO CARDS NO MOBILE  */
+/* ========================= */
+@media (max-width: 768px) {
+  /* esconder o header */
+  .mat-mdc-header-row {
+    display: none;
+  }
+
+  /* cada linha vira um "card" */
+  .mat-mdc-row {
+    display: grid;
+    grid-template-columns: 1fr; /* uma coluna empilhada */
+    gap: 6px;
+    padding: 12px;
+    margin-bottom: 12px;
+    border: 1px solid #eee;
+    border-radius: 8px;
+  }
+
+  /* cada célula mostra o rótulo à esquerda */
+  .mat-mdc-cell {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 4px 0;
+    /* evita quebrar layout se for conteúdo grande */
+    word-break: break-word;
+  }
+
+  .mat-mdc-cell::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: #555;
+    margin-right: 12px;
+    text-align: left;
+  }
+
+  /* ações à esquerda no card */
+  .actions {
+    justify-content: flex-start;
+  }
+
+  /* botão de pagamento ocupa largura inteira no mobile */
+  .pagamento-inscricao {
+    justify-content: stretch;
+  }
+  .pagamento-inscricao button,
+  .pagamento-inscricao .mat-mdc-button-base {
+    width: 100%;
+  }
+}
+
+
+

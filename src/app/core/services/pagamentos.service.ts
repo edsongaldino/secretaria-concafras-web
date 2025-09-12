@@ -4,20 +4,33 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { PagamentoCreateResultDto } from '../models/pagamento.model';
 
+
+export interface CheckoutGrupoPayload {
+  eventoId: string;
+  responsavelFinanceiroId: string;
+  excluirInscricaoIds: string[]; // nunca null
+}
+
 @Injectable({
   providedIn: 'root'
 })
+
 export class PagamentoService {
 
   private readonly apiUrl = `${environment.apiUrl}/pagamentos`;
 
   constructor(private http: HttpClient) {} 
 
-  criarCheckoutGrupo(eventoId: string, responsavelId: string) {
-    console.log(eventoId, responsavelId);
-    return this.http.post<PagamentoCreateResultDto>(`${this.apiUrl}/checkout/grupo`, {
-      eventoId, responsavelFinanceiroId: responsavelId
-    });
+  criarCheckoutGrupo(body: CheckoutGrupoPayload) {
+    // garanta que excluirInscricaoIds nunca é null/undefined
+    if (!body.excluirInscricaoIds) body.excluirInscricaoIds = [];
+
+
+    return this.http.post<{
+      checkoutUrl?: string;
+      mensagem?: string;
+      // ... resto do contrato
+    }>(`${this.apiUrl}/checkout/grupo`, body);
   }
 
   obterStatus(pagamentoId: string) {

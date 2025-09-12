@@ -19,4 +19,8 @@ export class ParticipanteService {
     return this.http.post<Participante>(`${this.apiUrl}/criar-ou-obter-por-cpf`, participante);
   }
 
+  obterPorId(id: string) {
+    return this.http.get<Participante>(`${this.apiUrl}/${id}`);
+  }
+
 }

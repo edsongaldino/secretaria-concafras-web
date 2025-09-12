@@ -7,9 +7,14 @@ import { AppComponent } from './app/app';
 import { provideHttpClient, withFetch } from '@angular/common/http';
 
 // Se você usa rotas:
+import { LOCALE_ID, importProvidersFrom } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { appRoutes } from './app/app.routes';
 import { provideNgxMask } from 'ngx-mask';
+import { registerLocaleData } from '@angular/common';
+import localePt from '@angular/common/locales/pt';
+
+registerLocaleData(localePt, 'pt-BR');
 
 bootstrapApplication(AppComponent, {
   providers: [
@@ -20,5 +25,6 @@ bootstrapApplication(AppComponent, {
       dropSpecialCharacters: true, // ex.: CPF sai “apenas dígitos”
       // você pode colocar outras opções aqui
     }),
+    { provide: LOCALE_ID, useValue: 'pt-BR' }
   ]
 });

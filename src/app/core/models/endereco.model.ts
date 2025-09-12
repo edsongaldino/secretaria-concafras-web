@@ -9,4 +9,5 @@ export interface Endereco {
   cep: string;
   cidadeId: string;
   cidade?: Cidade; // opcional: incluído quando já vier populado da API
+  estado?: string;
 }

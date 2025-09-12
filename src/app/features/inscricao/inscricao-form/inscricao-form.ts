@@ -46,6 +46,11 @@ export class InscricaoForm implements OnInit {
   responsavelId!: string;
   isLoadingCursos = false;
 
+  // ====== EDIÇÃO ======
+  isEdit = false;
+  inscricaoId?: string;
+  // =====================
+
   constructor(
     private route: ActivatedRoute,
     private fb: FormBuilder,
@@ -62,21 +67,42 @@ export class InscricaoForm implements OnInit {
   ngOnInit(): void {
     this.inicializarForm();
 
-    const eventoId = this.route.snapshot.paramMap.get('eventoId');
-    this.responsavelId = this.route.snapshot.paramMap.get('responsavelId')!;
+    // pega parâmetros mesmo em rotas aninhadas
+    const idEdicaoParam = this.getRouteParamAny('id', 'inscricaoId');
 
-    if (!eventoId) {
-      console.error('Parâmetro :eventoId não encontrado.');
-      return;
-    }
+    const eventoIdFromRoute = this.getRouteParamDeep('eventoId');
+    const responsavelIdFromRoute = this.getRouteParamDeep('responsavelId');
+
+    // Fallback: se a URL tiver '/editar/', considere edição
+    const url = this.router.url || '';
+    const isEditarUrl = /\/editar\//i.test(url);
+
+    // Detecta modo edição
+    this.isEdit = !!idEdicaoParam || isEditarUrl;
+    this.inscricaoId = idEdicaoParam ?? (isEditarUrl ? this.route.snapshot.paramMap.get('id') ?? this.route.snapshot.paramMap.get('inscricaoId') ?? undefined : undefined);
 
     // Reage à mudança de público para ligar/desligar "responsável"
     this.form.get('publico')?.valueChanges
       .pipe(startWith(this.form.get('publico')?.value))
       .subscribe((pub: string) => this.toggleResponsavel(pub));
 
+    if (this.isEdit && this.inscricaoId) {
+      // MODO EDIÇÃO
+      this.carregarParaEdicao(this.inscricaoId);
+      return;
+    }
+
+    // ===== MODO CRIAÇÃO =====
+    if (!eventoIdFromRoute) {
+      console.error('Parâmetro :eventoId não encontrado (modo criação). URL:', url);
+      this.notify.errorCenter('Erro', 'Evento não informado na rota.');
+      return;
+    }
+
+    this.responsavelId = responsavelIdFromRoute!;
+
     // Preenche o form com o id do evento e trava edição
-    this.form.patchValue({ eventoId });
+    this.form.patchValue({ eventoId: eventoIdFromRoute });
     this.form.get('eventoId')?.disable();
 
     // Recalcula público quando o usuário altera a data de nascimento
@@ -85,25 +111,24 @@ export class InscricaoForm implements OnInit {
       .subscribe((val: string) => this.definirPublicoPeloEvento(val));
 
     // 1) Carrega o evento
-    this.eventoService.obterPorId(eventoId)
+    this.eventoService.obterPorId(eventoIdFromRoute)
       .pipe(
         tap((evento) => {
           this.evento = evento;
-          // Se já tinha data preenchida, garante cálculo
           const dn = this.form.get('dataNascimento')?.value as string | null;
           if (dn) this.definirPublicoPeloEvento(dn);
         }),
-        // 2) Carrega comissões (cursos ficam reativos abaixo)
+        // 2) Carrega comissões
         switchMap(() =>
           this.comissaoEventoService
-            .listarPorEvento(eventoId)
+            .listarPorEvento(eventoIdFromRoute)
             .pipe(catchError(() => of([])))
         )
       )
       .subscribe({
         next: (comissoes) => {
           this.comissoes = comissoes;
-          // 3) Só depois de ter evento e form prontos, ligo o auto-refresh dos cursos
+          // 3) Auto-refresh dos cursos
           this.setupAutoRefreshCursos();
         },
         error: (err) => console.error('Erro ao carregar dados do evento/comissões', err)
@@ -112,14 +137,13 @@ export class InscricaoForm implements OnInit {
 
   /** Atualiza cursos sempre que público / neófito / trabalhador mudarem. */
   private setupAutoRefreshCursos() {
-    const publico$    = this.form.get('publico')!.valueChanges.pipe(startWith(this.form.get('publico')!.value));
-    const neofito$    = this.form.get('neofito')!.valueChanges.pipe(startWith(this.form.get('neofito')!.value));
-    const trabalhador$= this.form.get('trabalhador')!.valueChanges.pipe(startWith(this.form.get('trabalhador')!.value));
+    const publico$     = this.form.get('publico')!.valueChanges.pipe(startWith(this.form.get('publico')!.value));
+    const neofito$     = this.form.get('neofito')!.valueChanges.pipe(startWith(this.form.get('neofito')!.value));
+    const trabalhador$ = this.form.get('trabalhador')!.valueChanges.pipe(startWith(this.form.get('trabalhador')!.value));
 
     combineLatest([publico$, neofito$, trabalhador$])
       .pipe(
         switchMap(([publico, neofito, trabalhador]) => {
-          // Se estiver em "trabalhador", limpa cursos e não busca
           if (trabalhador === true) {
             this.cursosTemaAtual = [];
             this.cursosTemaEspecifico = [];
@@ -151,7 +175,6 @@ export class InscricaoForm implements OnInit {
       .subscribe(({ atual, espec }) => {
         this.cursosTemaAtual = atual;
         this.cursosTemaEspecifico = espec;
-        // Se a opção selecionada saiu da lista após o filtro, zera o control
         this.ensureInOptions('cursoTemaAtualId', this.cursosTemaAtual);
         this.ensureInOptions('cursoTemaEspecificoId', this.cursosTemaEspecifico);
       });
@@ -176,7 +199,7 @@ export class InscricaoForm implements OnInit {
       telefone: [''],
       instituicao: [''],
       trabalhador: [false],
-      neofito: [null], // null => não filtra; mude para true/false se quiser filtro padrão
+      neofito: [null],
       cursoTemaAtualId: [null],
       cursoTemaEspecificoId: [null],
       comissaoId: [null],
@@ -311,7 +334,87 @@ export class InscricaoForm implements OnInit {
     return this.form?.get('publico')?.value === 'Crianca';
   }
 
-  // ================== SALVAR ==================
+  // ================== MODO EDIÇÃO ==================
+
+  private carregarParaEdicao(id: string) {
+    this.inscricaoService.getInscricaoEdit(id)
+      .pipe(
+        switchMap((insc: any) => {
+          if (!insc) throw new Error('Inscrição não encontrada');
+
+          // fonte da verdade no modo edição
+          this.responsavelId = insc.responsavelFinanceiroId
+            ?? this.getRouteParamDeep('responsavelId')
+            ?? this.responsavelId;
+
+          // eventoId fixo e readonly
+          this.form.patchValue({ eventoId: insc.eventoId });
+          this.form.get('eventoId')?.disable();
+
+          return this.eventoService.obterPorId(insc.eventoId).pipe(
+            tap((evento) => (this.evento = evento)),
+            switchMap(() => this.comissaoEventoService.listarPorEvento(insc.eventoId)),
+            tap((comissoes) => (this.comissoes = comissoes)),
+            tap(() => this.setupAutoRefreshCursos()),
+            switchMap(() =>
+              this.participanteService.obterPorId(insc.participanteId)
+                .pipe(
+                  catchError(() => of(null)),
+                  tap((p: any) => {
+                    // Preenche dados básicos do participante
+                    this.form.patchValue({
+                      nome: p?.nome ?? insc.participanteNome ?? '',
+                      cpf: p?.cpf ?? '',
+                      email: p?.email ?? '',
+                      telefone: p?.telefone ?? '',
+                      instituicao: p?.instituicaoNome ?? '',
+                      dataNascimento: this.toBrDateFromIso(p?.dataNascimento) ?? '',
+                      endereco: {
+                        cep: p?.endereco?.cep ?? '',
+                        logradouro: p?.endereco?.logradouro ?? '',
+                        numero: p?.endereco?.numero ?? '',
+                        complemento: p?.endereco?.complemento ?? '',
+                        bairro: p?.endereco?.bairro ?? '',
+                        cidade: p?.endereco?.cidade ?? '',
+                        estado: p?.endereco?.estado ?? ''
+                      }
+                    }, { emitEvent: false });
+                  }),
+                  tap(() => {
+                    // Define tipo e cursos/comissão
+                    const trabalhador = !!insc.ehTrabalhador;
+                    this.form.patchValue({ trabalhador }, { emitEvent: false });
+
+                    if (trabalhador) {
+                      this.form.patchValue({ comissaoId: insc.comissaoEventoId ?? null }, { emitEvent: false });
+                    } else {
+                      const [temaAtual, temaEspec] = Array.isArray(insc.cursoIds) ? insc.cursoIds : [];
+                      this.form.patchValue({
+                        cursoTemaAtualId: temaAtual ?? null,
+                        cursoTemaEspecificoId: temaEspec ?? null
+                      }, { emitEvent: false });
+                    }
+                  }),
+                  tap(() => {
+                    // recalcula público se já houver data
+                    const dn = this.form.get('dataNascimento')?.value as string | null;
+                    if (dn) this.definirPublicoPeloEvento(dn);
+                  })
+                )
+            )
+          );
+        })
+      )
+      .subscribe({
+        next: () => { /* ok */ },
+        error: (err) => {
+          console.error('Erro ao carregar a inscrição para edição:', err);
+          this.notify.errorCenter('Erro', 'Não foi possível carregar a inscrição para edição.');
+        }
+      });
+  }
+
+  // ================== SALVAR (CRIAÇÃO) ==================
 
   async salvar(): Promise<void> {
     if (this.form.invalid) return;
@@ -377,7 +480,6 @@ export class InscricaoForm implements OnInit {
         allowOutsideClick: false
       });
 
-      // (Opcional) marca os controles com erro do servidor para aparecer <mat-error>
       if (errorsObj) {
         Object.keys(errorsObj).forEach(k => {
           const ctrl = this.form.get(this.mapServerFieldToForm(k));
@@ -433,9 +535,8 @@ export class InscricaoForm implements OnInit {
     const map: Record<string, string> = {
       EventoId: 'eventoId',
       ParticipanteId: 'participanteId',
-      CursoOuComissao: 'cursoTemaAtualId' // ajuste se quiser marcar outro control
+      CursoOuComissao: 'cursoTemaAtualId'
     };
-    // fallback: tenta camelCase
     return map[k] ?? (k ? k.charAt(0).toLowerCase() + k.slice(1) : k);
   }
 
@@ -443,9 +544,39 @@ export class InscricaoForm implements OnInit {
     return v === '' || v === undefined || v === null ? null : v;
   }
 
-  private toDateOnly(d: Date) {
-    const pad = (n: number) => n.toString().padStart(2, '0');
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  private toDateOnly(data: string) {
+    const [dia, mes, ano] = (data || '').split('/');
+    return `${ano}-${mes}-${dia}`; // yyyy-MM-dd
   }
 
+  /** Converte ISO/Date para dd/MM/yyyy (ou retorna null se inválido) */
+  private toBrDateFromIso(value: any): string | null {
+    if (!value) return null;
+    // pode vir "2025-09-12T00:00:00Z" ou "2025-09-12T00:00:00" ou Date
+    const d = value instanceof Date ? value : new Date(String(value));
+    if (isNaN(d.getTime())) return null;
+    const dd = String(d.getDate()).padStart(2, '0');
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const yyyy = d.getFullYear();
+    return `${dd}/${mm}/${yyyy}`;
+  }
+
+  private getRouteParamAny(...names: string[]): string | null {
+    for (const n of names) {
+      const v = this.getRouteParamDeep(n);
+      if (v) return v;
+    }
+    return null;
+  }
+
+  /** Busca um parâmetro subindo na árvore de rotas (rota atual -> pais). */
+  private getRouteParamDeep(name: string): string | null {
+    let r: any = this.route.snapshot;
+    while (r) {
+      const v = r.paramMap?.get?.(name);
+      if (v) return v;
+      r = r.parent;
+    }
+    return null;
+  }
 }

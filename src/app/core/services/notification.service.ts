@@ -42,21 +42,24 @@ export class NotificationService {
   }
 
   /** Modal de confirmação (retorna o resultado do SweetAlert2) */
-  confirm(
+  async confirm(
     title: string,
     text: string,
-    confirmText: string = 'Sim',
-    cancelText: string = 'Cancelar'
-  ) {
-    return Swal.fire({
-      ...this.centralAnim,
-      icon: 'question',
+    confirmButtonText = 'Sim',
+    cancelButtonText = 'Cancelar'
+  ): Promise<boolean> {
+    const result = await Swal.fire({
       title,
       text,
+      icon: 'warning',
       showCancelButton: true,
-      confirmButtonText: confirmText,
-      cancelButtonText: cancelText
+      confirmButtonText,
+      cancelButtonText,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6'
     });
+
+    return result.isConfirmed; // 👈 só retorna true se clicou em "Sim"
   }
 
   /** Toast rápido de sucesso (canto da tela) */

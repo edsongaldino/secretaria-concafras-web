@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { Inscricao, ListaInscricoesDto } from '../models/inscricao.model';
+import { Inscricao, InscricaoEditDto, ListaInscricoesDto } from '../models/inscricao.model';
 
 @Injectable({
   providedIn: 'root'
@@ -22,11 +22,25 @@ export class InscricaoService {
   }
 
   criarInscricao(inscricao: Inscricao): Observable<Inscricao> {
+    console.log(inscricao);
     return this.http.post<Inscricao>(`${this.apiUrl}/criar`, inscricao);
   }
 
   getInscricoes(eventoId: string, participanteId: string) {
     return this.http.get<ListaInscricoesDto[]>(`${this.apiUrl}/lista-inscricoes/${eventoId}/${participanteId}`);
+  }
+
+  async excluir(id: string): Promise<void> {
+    // await fetch(`${api}/inscricoes/${id}`, { method: 'DELETE' });
+  }
+
+  getInscricaoEdit(id: string) {
+    return this.http.get<InscricaoEditDto>(`${this.apiUrl}/${id}/full`);
+  }
+
+  // (opcional) atualizar
+  atualizarInscricao(id: string, body: any) {
+    return this.http.put<void>(`${this.apiUrl}/${id}`, body);
   }
 
 }
