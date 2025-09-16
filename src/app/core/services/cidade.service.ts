@@ -1,22 +1,15 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { Cidade } from '../models/cidade.model';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
+export interface CidadeDto { id: string; nome: string; ibge: string; estadoId: string; uf: string; }
+
 @Injectable({ providedIn: 'root' })
+
 export class CidadeService {
-
-  private readonly apiUrl = `${environment.apiUrl}/cidades`;
-
-  constructor(private http: HttpClient) {}
-
-  listar(): Observable<Cidade[]> {
-    return this.http.get<Cidade[]>(this.apiUrl);
-  }
-
-  buscarPorNomeEUf(nome: string, uf: string): Observable<Cidade | null> {
-    return this.http.get<Cidade>(`${this.apiUrl}/buscar?nome=${nome}&uf=${uf}`);
-  }
-
+  private http = inject(HttpClient);
+  listarPorEstado(estadoId: string) { return this.http.get<{id:string;nome:string}[]>(`/api/estados/${estadoId}/cidades`); }
+  obterPorIbge(ibge: string) { return this.http.get<CidadeDto>(`/api/cidades/ibge/${ibge}`); }
 }

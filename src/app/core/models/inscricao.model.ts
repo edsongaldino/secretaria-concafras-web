@@ -36,3 +36,5 @@ export interface InscricaoEditDto {
   comissaoEventoId?: string | null;
   cursoIds: string[];
 }
+
+export type InscricaoExistenciaDto = { existe: boolean; inscricaoId?: string | null };

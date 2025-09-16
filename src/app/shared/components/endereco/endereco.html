@@ -1,11 +1,11 @@
 <div class="endereco-form" [formGroup]="formGroup">
 
   <!-- CEP | Número | Complemento -->
-  <div class="form-grid grid-3">
+  <div class="form-grid grid-3" *ngIf="isBR()">
     <div>
       <mat-form-field appearance="outline">
         <mat-label>CEP</mat-label>
-        <input matInput formControlName="cep" (blur)="buscarCep()" placeholder="Digite o CEP" />
+        <input matInput formControlName="cep" mask="00000-000" (blur)="buscarCep()" placeholder="00000-000" />
       </mat-form-field>
     </div>
 
@@ -41,30 +41,62 @@
     </div>
   </div>
 
-  <!-- Estado | Cidade -->
-  <div class="form-grid grid-2">
+  <!-- País | Estado/Província | Cidade (sempre na mesma linha) -->
+  <div class="form-grid grid-3">
+    <!-- País -->
     <div>
-      <mat-form-field appearance="outline">
-        <mat-label>Estado</mat-label>
-        <mat-select formControlName="estado" (selectionChange)="carregarCidades()">
-          <mat-option value="">Selecione</mat-option>
-          <mat-option *ngFor="let estado of estados" [value]="estado.sigla">
-            {{ estado.nome }}
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>País</mat-label>
+        <mat-select formControlName="countryCode" (selectionChange)="onPaisChange()">
+          <mat-option *ngFor="let p of paises; trackBy: trackPais" [value]="p.iso2">
+            {{ p.nome }}
           </mat-option>
         </mat-select>
       </mat-form-field>
     </div>
 
+    <!-- Coluna 2: Estado (BR) | Província (não-BR) -->
     <div>
-      <mat-form-field appearance="outline">
-        <mat-label>Cidade</mat-label>
-        <mat-select formControlName="cidade">
-          <mat-option value="">Selecione</mat-option>
-          <mat-option *ngFor="let cidade of cidades" [value]="cidade">
-            {{ cidade }}
-          </mat-option>
-        </mat-select>
-      </mat-form-field>
+      <ng-container *ngIf="isBR(); else provinciaInput">
+        <mat-form-field appearance="outline">
+          <mat-label>Estado (UF)</mat-label>
+          <!-- mantém compat: 'estado' = UF -->
+          <mat-select formControlName="estado" (selectionChange)="onEstadoChange()">
+            <mat-option value="">Selecione</mat-option>
+            <mat-option *ngFor="let e of estados; trackBy: trackEstado" [value]="e.uf">
+              {{ e.nome }} ({{ e.uf }})
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+      </ng-container>
+      <ng-template #provinciaInput>
+        <mat-form-field appearance="outline">
+          <mat-label>Estado/Província</mat-label>
+          <input matInput formControlName="estadoProvincia" />
+        </mat-form-field>
+      </ng-template>
+    </div>
+
+    <!-- Coluna 3: Cidade (BR select) | Cidade (não-BR texto) -->
+    <div>
+      <ng-container *ngIf="isBR(); else cidadeTextoInput">
+        <mat-form-field appearance="outline">
+          <mat-label>Cidade</mat-label>
+          <!-- mantém compat: 'cidade' = nome -->
+          <mat-select formControlName="cidade" (selectionChange)="onCidadeChange()">
+            <mat-option value="">Selecione</mat-option>
+            <mat-option *ngFor="let c of cidades; trackBy: trackCidade" [value]="c.nome">
+              {{ c.nome }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+      </ng-container>
+      <ng-template #cidadeTextoInput>
+        <mat-form-field appearance="outline">
+          <mat-label>Cidade</mat-label>
+          <input matInput formControlName="cidadeTexto" />
+        </mat-form-field>
+      </ng-template>
     </div>
   </div>
 

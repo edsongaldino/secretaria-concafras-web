@@ -15,12 +15,15 @@ export class ParticipanteService {
   constructor(private http: HttpClient) {}
 
   criarOuObterPorCpf(participante: Participante): Observable<Participante> {
-    console.log(participante);
     return this.http.post<Participante>(`${this.apiUrl}/criar-ou-obter-por-cpf`, participante);
   }
 
   obterPorId(id: string) {
     return this.http.get<Participante>(`${this.apiUrl}/${id}`);
+  }
+
+  obterPorCpf(cpf: string) {
+    return this.http.get<Participante>(`${this.apiUrl}/obter-por-cpf/${cpf}`);
   }
 
 }

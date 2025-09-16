@@ -4,3 +4,9 @@
 
 /* garante largura total dos campos na coluna */
 mat-form-field { width: 100%; }
+
+.form-grid {
+  display: grid;
+  gap: 1rem;
+  &.grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}

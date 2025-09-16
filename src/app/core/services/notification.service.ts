@@ -29,6 +29,23 @@ export class NotificationService {
     });
   }
 
+  infoCenter(
+    title: string,
+    text?: string,
+    confirmText: string = 'Ok',
+    afterConfirm?: () => void
+  ) {
+    return Swal.fire({
+      ...this.centralAnim,
+      icon: 'info',
+      title,
+      text,
+      confirmButtonText: confirmText
+    }).then(r => {
+      if (r.isConfirmed && afterConfirm) afterConfirm();
+    });
+  }
+
   /** Modal centralizado de erro (confirmação manual) */
   errorCenter(title: string = 'Erro', text?: string, footer?: string) {
     return Swal.fire({

@@ -4,7 +4,7 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 
 import { combineLatest, forkJoin, of, firstValueFrom } from 'rxjs';
-import { catchError, distinctUntilChanged, startWith, switchMap, tap } from 'rxjs/operators';
+import { catchError, distinctUntilChanged, startWith, switchMap, tap, debounceTime, filter, map } from 'rxjs/operators'; // <<< novo
 
 import { MaterialModule } from '../../../shared/material.module';
 import { EnderecoComponent } from '../../../shared/components/endereco/endereco';
@@ -21,6 +21,7 @@ import { Evento } from '../../../core/models/evento.model';
 
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import Swal from 'sweetalert2';
+import { InscricaoExistenciaDto } from '../../../core/models/inscricao.model';
 
 type Publico = 'Crianca' | 'Jovem' | 'Adulto';
 
@@ -45,6 +46,8 @@ export class InscricaoForm implements OnInit {
   comissoes: any[] = [];
   responsavelId!: string;
   isLoadingCursos = false;
+  inscricaoExistenteId?: string;   // <- ID da inscrição existente
+  inscricaoExistente?: boolean;
 
   // ====== EDIÇÃO ======
   isEdit = false;
@@ -104,6 +107,9 @@ export class InscricaoForm implements OnInit {
     // Preenche o form com o id do evento e trava edição
     this.form.patchValue({ eventoId: eventoIdFromRoute });
     this.form.get('eventoId')?.disable();
+
+    // <<< novo: observar CPF e pré-preencher + checar inscrição existente
+    this.setupCpfPrecheck(eventoIdFromRoute);
 
     // Recalcula público quando o usuário altera a data de nascimento
     this.form.get('dataNascimento')?.valueChanges
@@ -434,6 +440,35 @@ export class InscricaoForm implements OnInit {
         })
       );
 
+      const participanteId = participante?.id ?? null;
+      if (!participanteId) {
+        await Swal.fire({
+          icon: 'error',
+          title: 'Erro ao salvar!',
+          text: 'Participante sem ID retornado pela API.',
+          confirmButtonText: 'Ok'
+        });
+        return;
+      }
+
+      const checagem = await firstValueFrom(
+        this.inscricaoService.checkExiste(this.evento.id, participanteId).pipe(
+          catchError(() => of({ existe: false, inscricaoId: null } as InscricaoExistenciaDto))
+        )
+      );
+
+      const jaExiste = !!checagem.existe;
+      if (jaExiste) {
+        this.inscricaoExistenteId = checagem.inscricaoId ?? undefined;
+        await Swal.fire({
+          icon: 'warning',
+          title: 'Já existe inscrição',
+          text: 'Este CPF já possui uma inscrição para este evento. Use a inscrição existente para continuar/pagar.',
+          confirmButtonText: 'Ok'
+        });
+        return;
+      }
+
       if (!participante?.id) {
         await Swal.fire({
           icon: 'error',
@@ -578,5 +613,94 @@ export class InscricaoForm implements OnInit {
       r = r.parent;
     }
     return null;
+  }
+
+  // ========= CPF precheck (novo) =========
+
+  /** Observa CPF (somente criação): busca participante por CPF e, se achar, preenche; também verifica inscrição no evento. */
+  private setupCpfPrecheck(eventoId: string) {
+    this.form.get('cpf')!.valueChanges.pipe(
+      debounceTime(400),
+      map(v => (v || '').toString()),
+      distinctUntilChanged(),
+      map(v => v.replace(/\D/g, '')),
+      filter(digits => digits.length >= 11),
+      switchMap(digits =>
+        // use o método que você JÁ tem na sua service:
+        // ex.: this.participanteService.obterPorCpf(digits)
+        this.participanteService.obterPorCpf(digits).pipe(
+          catchError(() => of(null)),
+          tap((p: any) => this.autopreencherPorParticipante(p)),
+          switchMap((p: any) => {
+            if (!p?.id) return of(null);
+            // usa o endpoint existente de inscrição por evento+participante
+            return this.inscricaoService.checkExiste(eventoId, p.id).pipe(
+              catchError(() => of({ existe: false } as InscricaoExistenciaDto)),
+              tap(res => {
+                if (res.existe) {
+                  this.inscricaoExistenteId = res.inscricaoId ?? undefined; // opcional, guardar
+                  this.notify.infoCenter(
+                    'Participante já inscrito neste evento',
+                    'Este CPF já possui uma inscrição para este evento. Acesse a inscrição existente para concluir o pagamento.'
+                  );
+                } else {
+                  this.inscricaoExistenteId = undefined;
+                }
+              })
+            );
+          })
+        )
+      ),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe();
+  }
+
+  /** Preenche o formulário a partir de um Participante (sem sobrescrever o que o usuário já digitou). */
+  private autopreencherPorParticipante(p: any) {
+    
+    if (!p) {
+      this.notify.infoCenter('Novo participante', 'Não encontramos cadastro para este CPF.');
+      return;
+    }
+
+    // Dados básicos
+    this.safePatch('nome', p.nome);
+    this.safePatch('email', p.email);
+    this.safePatch('telefone', p.telefone);
+    this.safePatch('instituicao', p.instituicaoNome ?? p.instituicao ?? '');
+
+    if (p.dataNascimento) {
+      const d = this.toBrDateFromIso(p.dataNascimento);
+      this.safePatch('dataNascimento', d);
+      if (d) this.definirPublicoPeloEvento(d);
+    }
+
+    // Endereço (mantendo sua estrutura atual)
+    const e = p.endereco || {};
+    this.safePatch('endereco.cep',         e.cep);
+    this.safePatch('endereco.logradouro',  e.logradouro);
+    this.safePatch('endereco.numero',      e.numero);
+    this.safePatch('endereco.complemento', e.complemento);
+    this.safePatch('endereco.bairro',      e.bairro);
+    this.safePatch('endereco.estado',      e.estado);  // UF (texto)
+    this.safePatch('endereco.cidade',      e.cidade);  // Nome (texto)
+
+    // Se setamos UF por patch, e seu EnderecoComponent depender do change, isso já dispara valueChanges.
+    // Caso precise garantir, reemita manualmente:
+    const uf = this.form.get('endereco.estado')?.value;
+    if (uf) this.form.get('endereco.estado')?.setValue(uf, { emitEvent: true });
+
+    this.notify.successCenter('Dados carregados', 'Cadastro encontrado para este CPF.');
+  }
+
+  /** Atribui valor apenas se o campo estiver vazio (não sobrescreve digitação do usuário). */
+  private safePatch(path: string, value: any) {
+    const ctrl = this.form.get(path);
+    if (!ctrl) return;
+    const cur = ctrl.value;
+    const isEmpty = cur === null || cur === undefined || cur === '';
+    if (isEmpty && value !== undefined && value !== null && value !== '') {
+      ctrl.patchValue(value, { emitEvent: false });
+    }
   }
 }
