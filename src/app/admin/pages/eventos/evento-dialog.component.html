@@ -1,0 +1,35 @@
+<h2 mat-dialog-title>{{ form.value.id ? 'Editar Evento' : 'Novo Evento' }}</h2>
+<div mat-dialog-content class="form-grid">
+  <mat-form-field appearance="outline">
+    <mat-label>Título</mat-label>
+    <input matInput formControlName="titulo" required>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Cidade</mat-label>
+    <input matInput formControlName="cidade">
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Estado</mat-label>
+    <input matInput formControlName="estado">
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Início</mat-label>
+    <input matInput [matDatepicker]="dp1" formControlName="dataInicio">
+    <mat-datepicker-toggle matSuffix [for]="dp1"></mat-datepicker-toggle>
+    <mat-datepicker #dp1></mat-datepicker>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Fim</mat-label>
+    <input matInput [matDatepicker]="dp2" formControlName="dataFim">
+    <mat-datepicker-toggle matSuffix [for]="dp2"></mat-datepicker-toggle>
+    <mat-datepicker #dp2></mat-datepicker>
+  </mat-form-field>
+</div>
+<div mat-dialog-actions align="end">
+  <button mat-button mat-dialog-close>Cancelar</button>
+  <button mat-raised-button color="primary" (click)="salvar()">Salvar</button>
+</div>

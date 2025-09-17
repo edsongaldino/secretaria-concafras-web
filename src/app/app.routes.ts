@@ -24,5 +24,7 @@ export const appRoutes: Routes = [
   { path: 'pagamento/sucesso',  component: PagamentoRetornoComponent },
   { path: 'pagamento/pendente', component: PagamentoRetornoComponent },
   { path: 'pagamento/erro',     component: PagamentoRetornoComponent },
-  { path: 'inscricoes/editar/:inscricaoId', component: InscricaoForm }
+  { path: 'inscricoes/editar/:inscricaoId', component: InscricaoForm },
+
+  { path: 'admin', loadChildren: () => import('./admin/admin.routes').then(m => m.ADMIN_ROUTES) }
 ];

@@ -1,0 +1,26 @@
+<div class="cards">
+  <app-status-card title="Receita" value="$30.200" delta="+10% no lucro"></app-status-card>
+  <app-status-card title="Tarefas" value="145" delta="-28% desempenho"></app-status-card>
+  <app-status-card title="Page Views" value="290+" delta="10k/dia"></app-status-card>
+  <app-status-card title="Downloads" value="500" delta="+1k na loja"></app-status-card>
+</div>
+
+<div class="grid">
+  <mat-card class="panel">
+    <h3>Sales per Day</h3>
+    <div echarts [options]="lineOptions" class="chart"></div>
+  </mat-card>
+
+  <mat-card class="panel">
+    <h3>Total Revenue</h3>
+    <div echarts [options]="pieOptions" class="chart"></div>
+  </mat-card>
+
+  <mat-card class="panel">
+    <h3>Traffic Sources</h3>
+    <div class="row" *ngFor="let s of sources">
+      <div class="row-head"><span>{{s.name}}</span><span>{{s.value}}%</span></div>
+      <mat-progress-bar mode="determinate" [value]="s.value"></mat-progress-bar>
+    </div>
+  </mat-card>
+</div>
