@@ -11,7 +11,7 @@ const adminGuard: CanMatchFn = () => {
 export const ADMIN_ROUTES: Routes = [
   {
     path: '',
-    canMatch: [adminGuard],
+    //canMatch: [adminGuard],
     loadComponent: () => import('./layout/admin-shell.component').then(m => m.AdminShellComponent),
     children: [
       { path: 'dashboard', loadComponent: () => import('./pages/dashboard/dashboard.component').then(m => m.DashboardComponent) },

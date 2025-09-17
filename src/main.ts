@@ -3,6 +3,8 @@ import 'zone.js'; // tem que ser a PRIMEIRA importação
 
 import { bootstrapApplication } from '@angular/platform-browser';
 import { AppComponent } from './app/app';
+import { provideEchartsCore } from 'ngx-echarts';
+import * as echarts from 'echarts';
 
 import { provideHttpClient, withFetch } from '@angular/common/http';
 
@@ -25,6 +27,7 @@ bootstrapApplication(AppComponent, {
       dropSpecialCharacters: true, // ex.: CPF sai “apenas dígitos”
       // você pode colocar outras opções aqui
     }),
+    provideEchartsCore({ echarts }),
     { provide: LOCALE_ID, useValue: 'pt-BR' }
   ]
 });

@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { RouterLink, RouterOutlet } from '@angular/router';
 import { NgIf, NgFor, AsyncPipe } from '@angular/common';
 import { AuthService } from '../../core/services/auth.service';
@@ -12,6 +12,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatBadgeModule } from '@angular/material/badge';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 @Component({
   standalone: true,
@@ -21,10 +22,31 @@ import { MatFormFieldModule } from '@angular/material/form-field';
   imports: [
     RouterOutlet, RouterLink, NgIf, NgFor, AsyncPipe,
     MatSidenavModule, MatToolbarModule, MatIconModule, MatListModule,
-    MatButtonModule, MatMenuModule, MatBadgeModule, MatInputModule, MatFormFieldModule
+    MatButtonModule, MatMenuModule, MatBadgeModule, MatInputModule, MatFormFieldModule,
+    MatTooltipModule
   ]
 })
-export class AdminShellComponent {
+export class AdminShellComponent implements OnInit {
   private auth = inject(AuthService);
+  mini = signal<boolean>(false);
+
+  ngOnInit(){
+    this.mini.set(localStorage.getItem('adminMini') === '1');
+  }
+
+  toggleMini(){
+    const next = !this.mini();
+    this.mini.set(next);
+    localStorage.setItem('adminMini', next ? '1' : '0');
+  }
+
+  can(perfis: string[]) {
+    const a: any = this.auth as any;
+    if (typeof a.hasAnyPerfil === 'function') return a.hasAnyPerfil(perfis);
+    if (typeof a.hasPerfil === 'function') return perfis.some((p: string) => a.hasPerfil(p));
+    const user = a.usuario ?? a.user ?? {};
+    const roles: string[] = user.perfis ?? user.roles ?? [];
+    return perfis.some((p: string) => roles.includes(p));
+  }
   logout(){ this.auth.logout(); }
 }
