@@ -26,6 +26,5 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 })
 export class AdminShellComponent {
   private auth = inject(AuthService);
-  can(perfis: string[]) { return this.auth.hasAnyPerfil(perfis as any); }
   logout(){ this.auth.logout(); }
 }

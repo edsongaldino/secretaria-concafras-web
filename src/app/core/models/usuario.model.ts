@@ -4,3 +4,6 @@ export interface Usuario {
   email: string;
   telefone: string;
 }
+
+export type PerfilUsuario =
+  | 'Participante' | 'Gestor' | 'Coordenador' | 'Financeiro' | 'Secretaria';

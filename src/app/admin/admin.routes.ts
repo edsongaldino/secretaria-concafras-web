@@ -4,7 +4,8 @@ import { AuthService } from '../core/services/auth.service';
 
 const adminGuard: CanMatchFn = () => {
   const auth = inject(AuthService);
-  return auth.isLoggedIn() && auth.hasAnyPerfil(['Gestor','Secretaria','Coordenador']);
+  //&& auth.hasAnyPerfil(['Gestor','Secretaria','Coordenador'])
+  return auth.isAuthenticated();
 };
 
 export const ADMIN_ROUTES: Routes = [

@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { isPlatformBrowser } from '@angular/common';
+import { PerfilUsuario } from '../models/usuario.model';
 
 @Injectable({
   providedIn: 'root'
