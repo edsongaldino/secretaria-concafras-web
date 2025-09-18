@@ -20,7 +20,6 @@ import { NotificationService } from '../../../core/services/notification.service
 import { Evento } from '../../../core/models/evento.model';
 
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import Swal from 'sweetalert2';
 import { InscricaoExistenciaDto } from '../../../core/models/inscricao.model';
 
 type Publico = 'Crianca' | 'Jovem' | 'Adulto';
@@ -442,12 +441,7 @@ export class InscricaoForm implements OnInit {
 
       const participanteId = participante?.id ?? null;
       if (!participanteId) {
-        await Swal.fire({
-          icon: 'error',
-          title: 'Erro ao salvar!',
-          text: 'Participante sem ID retornado pela API.',
-          confirmButtonText: 'Ok'
-        });
+        this.notify.errorCenter('Erro ao salvar!', `Participante sem ID retornado pela API.`);
         return;
       }
 
@@ -460,22 +454,12 @@ export class InscricaoForm implements OnInit {
       const jaExiste = !!checagem.existe;
       if (jaExiste) {
         this.inscricaoExistenteId = checagem.inscricaoId ?? undefined;
-        await Swal.fire({
-          icon: 'warning',
-          title: 'Já existe inscrição',
-          text: 'Este CPF já possui uma inscrição para este evento. Use a inscrição existente para continuar/pagar.',
-          confirmButtonText: 'Ok'
-        });
+        this.notify.infoCenter('Inscrição existente!', `Este CPF já possui uma inscrição para este evento. Use a inscrição existente para continuar/pagar.`);
         return;
       }
 
       if (!participante?.id) {
-        await Swal.fire({
-          icon: 'error',
-          title: 'Erro ao salvar!',
-          text: 'Participante não encontrado ou não pôde ser criado.',
-          confirmButtonText: 'Ok'
-        });
+        this.notify.errorCenter('Erro ao salvar!', `Participante não encontrado ou não pôde ser criado.`);
         return;
       }
 
@@ -494,26 +478,13 @@ export class InscricaoForm implements OnInit {
         this.responsavelId ??
         participante.id;
 
-      await Swal.fire({
-        icon: 'success',
-        title: 'Inscrição concluída!',
-        text: 'Na próxima tela você pode efetuar o pagamento ou incluir mais inscrições.',
-        confirmButtonText: 'Continuar'
-      });
-
+      this.notify.successCenter('Inscrição concluída!', `Na próxima tela você pode efetuar o pagamento ou incluir mais inscrições.`);
       this.router.navigate(['/eventos', eventoId, 'inscricoes', responsavelId]);
 
     } catch (err: any) {
       const { icon, title, html, errorsObj } = this.extractProblem(err);
 
-      await Swal.fire({
-        icon,
-        title,
-        html,
-        confirmButtonText: 'Ok',
-        width: 520,
-        allowOutsideClick: false
-      });
+      this.notify.errorCenter(title, html);
 
       if (errorsObj) {
         Object.keys(errorsObj).forEach(k => {
