@@ -4,7 +4,7 @@ import { RouterModule } from '@angular/router';
 
 // project import
 import { NavigationItem } from '../../navigation';
-import { SharedModule } from 'src/app/theme/shared/shared.module';
+import { SharedModule } from '../../../../shared/shared.module';
 
 // service
 

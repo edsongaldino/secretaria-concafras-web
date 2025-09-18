@@ -16,7 +16,7 @@ import { HeaderComponent } from '../../header/header';
 @Component({
   selector: 'app-inscricao-list',
   standalone: true,
-  imports: [CommonModule, MaterialModule, MatPaginator, HeaderComponent],
+  imports: [CommonModule, MaterialModule, HeaderComponent],
   templateUrl: './inscricao-list.html',
   styleUrls: ['./inscricao-list.scss']
 })

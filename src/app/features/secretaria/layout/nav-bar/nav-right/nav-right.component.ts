@@ -6,13 +6,11 @@ import { animate, style, transition, trigger } from '@angular/animations';
 import { NgbDropdownConfig } from '@ng-bootstrap/ng-bootstrap';
 
 // project import
-import { SharedModule } from 'src/app/theme/shared/shared.module';
-import { ChatUserListComponent } from './chat-user-list/chat-user-list.component';
-import { ChatMsgComponent } from './chat-msg/chat-msg.component';
+import { SharedModule } from '../../../shared/shared.module';
 
 @Component({
   selector: 'app-nav-right',
-  imports: [SharedModule, ChatUserListComponent, ChatMsgComponent],
+  imports: [SharedModule],
   templateUrl: './nav-right.component.html',
   styleUrls: ['./nav-right.component.scss'],
   providers: [NgbDropdownConfig],

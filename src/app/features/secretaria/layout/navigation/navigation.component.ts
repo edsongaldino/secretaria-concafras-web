@@ -2,7 +2,7 @@
 import { Component, output } from '@angular/core';
 
 // project import
-import { SharedModule } from 'src/app/theme/shared/shared.module';
+import { SharedModule } from '../../shared/shared.module';
 import { NavContentComponent } from './nav-content/nav-content.component';
 
 @Component({
