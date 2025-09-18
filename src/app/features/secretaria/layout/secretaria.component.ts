@@ -12,9 +12,10 @@ import { Footer } from './footer/footer';
 
 @Component({
   selector: 'app-secretaria',
+  standalone: true,
   imports: [ConfigurationComponent, RouterModule, NavBarComponent, NavigationComponent, CommonModule, BreadcrumbComponent, Footer],
   templateUrl: './secretaria.component.html',
-  styleUrls: ['./secretaria.component.scss']
+  styleUrls: ['./secretaria.component.scss', '../assets/scss/styles.scss']
 })
 export class SecretariaComponent {
   private location = inject(Location);

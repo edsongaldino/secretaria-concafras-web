@@ -7,5 +7,8 @@ export const appRoutes: Routes = [
     loadChildren: () =>
       import('./features/portal/portal.routes').then(m => m.PORTAL_ROUTES)
   },
-  { path: 'secretaria', loadChildren: () => import('./features/secretaria/secretaria.routes').then(m => m.SECRETARIA_ROUTES) }
+  { path: 'secretaria', 
+    loadChildren: () => 
+      import('./features/secretaria/secretaria.routes').then(m => m.SECRETARIA_ROUTES) 
+  }
 ];

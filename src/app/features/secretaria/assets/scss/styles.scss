@@ -1,0 +1,41 @@
+// Theme Font
+@import './themes/font/theme-font';
+
+// main framework
+@import 'bootstrap/scss/functions';
+@import 'bootstrap/scss/variables';
+@import './settings/custom-variables';
+@import './settings/theme-variables';
+
+// bootstrap
+@import 'bootstrap/scss/bootstrap';
+@import 'bootstrap/scss/mixins';
+@import 'bootstrap/scss/utilities';
+@import 'bootstrap/scss/utilities/api';
+@import 'bootstrap/dist/css/bootstrap.css';
+@import './themes/general';
+@import './themes/generic';
+@import './themes/minixs/function';
+
+// icon
+@import './themes/font/datta-icon';
+@import './themes/font/feather';
+@import './themes/font/fontawesome';
+@import './themes/font/flaticon';
+
+// component
+@import './themes/component/component';
+
+// theme layouts
+@import './themes/layouts/pc-footer.scss';
+@import './themes/layouts/menu-lite';
+@import './themes/layouts/menu-ng';
+
+// dashboard
+@import './themes/pages/dashboard.scss';
+@import './themes/pages/authentication';
+
+@import './themes/chat/chat';
+
+// custom
+@import './themes/custom';
