@@ -2,7 +2,7 @@ name: CI/CD - Secretaria Concafras WEB
 
 on:
   push:
-    branches: [ main ]
+    branches: [ master ]
   workflow_dispatch:
 
 env:
