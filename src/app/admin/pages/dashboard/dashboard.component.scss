@@ -1,6 +1,0 @@
-.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:16px}
-.grid{display:grid;grid-template-columns:2fr 1fr 1fr;gap:16px}
-.panel{padding:12px}
-.chart{height:260px;width:100%}
-.row-head{display:flex;justify-content:space-between}
-@media (max-width: 1200px){ .cards{grid-template-columns:repeat(2,1fr);} .grid{grid-template-columns:1fr;} }

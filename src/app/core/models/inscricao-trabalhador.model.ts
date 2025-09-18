@@ -1,4 +1,4 @@
-import { Inscricao } from "../../features/inscricao/inscricao";
+import { Inscricao } from "../../features/portal/inscricao/inscricao";
 
 export interface InscricaoTrabalhador {
   id: string;
