@@ -1,9 +1,14 @@
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="page-header">
   <h2 class="mat-headline">Eventos Cadastrados</h2>
-  <button mat-flat-button color="primary" (click)="router.navigate(['/eventos/novo'])">
+
+  <button mat-flat-button color="primary"
+          class="add-button"
+          (click)="router.navigate(['/eventos/novo'])">
+    <mat-icon>add</mat-icon>
     Novo Evento
   </button>
 </div>
+
 
 <mat-table [dataSource]="dataSource" class="mat-elevation-z8">
 
