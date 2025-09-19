@@ -1,0 +1,115 @@
+.app-container { height: 100vh; }
+
+.app-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background-color: #21469a;
+  color: #FFF !important;
+}
+
+.app-toolbar .mat-icon{
+    color: #FFF !important;
+}
+
+.spacer { flex: 1 1 auto; }
+
+.app-sidenav {
+  width: 260px;
+  background: #fff;
+  box-shadow: inset -1px 0 0 rgba(0,0,0,.06);
+  border-right: 0;
+
+  &.collapsed {
+    width: 72px;
+
+    mat-nav-list a .mat-mdc-list-item-title {
+      display: none;
+    }
+  }
+
+  .brand {
+    display: flex;
+    font-size: 20px;
+    font-weight: bold;
+    color: #21469a;
+    align-items: center;
+    gap: .75rem;
+    padding: 1rem 1rem .5rem 1rem;
+
+    .brand-logo {
+        width: 32px;   /* tamanho da logo (ajuste conforme precisar) */
+        height: 32px;
+        object-fit: contain;
+    }
+
+    &.center {
+        justify-content: center;
+
+        .brand-logo {
+        margin: 0 auto;   /* centraliza quando colapsado */
+        }
+
+        span {
+        display: none;
+        }
+    }
+    }
+
+}
+
+.app-content { min-height: 100vh; background: #f7f7f9; }
+
+.page { padding: 16px; }
+
+.mat-mdc-list-item.active { background: rgba(0,0,0,.06); }
+
+@media (max-width: 599px) {
+  .hide-in-handset { display: none !important; }
+}
+
+.mat-mdc-nav-list .mat-mdc-list-item {
+  border-radius: 0 !important;
+  --mat-focus-indicator-border-radius: 0 !important;
+}
+
+/* largura quando colapsado — ajuste se quiser */
+$app-sidenav-collapsed: 72px;
+
+.app-sidenav {
+  width: 260px;
+
+  &.collapsed {
+    width: $app-sidenav-collapsed;
+
+    /* remove espaços laterais padrão e centraliza a coluna do ícone */
+    mat-nav-list { padding: 8px 0; }
+
+    .mat-mdc-list-item {
+      padding: 0;                     /* tira o padding lateral */
+      justify-content: center;        /* centraliza o conteúdo */
+      min-height: 48px;               /* altura confortável (opcional) */
+
+      /* zera as margens da área de ícone (estrutura MDC) */
+      .mdc-list-item__start { margin: 0; }
+
+      /* garante que o ícone fique exatamente central */
+      .mat-mdc-list-item-icon,
+      .mdc-list-item__start {
+        display: grid;
+        place-items: center;
+        width: 40px;                  /* “coluna” do ícone */
+        height: 40px;  
+        margin-left: 15px;               /* clique confortável */
+      }
+
+      /* esconde o texto no colapsado (já fazia, mas reforça) */
+      .mat-mdc-list-item-title,
+      .mdc-list-item__primary-text { display: none; }
+    }
+
+    /* deixa a “marca” centralizada também */
+    .brand.center { justify-content: center; }
+  }
+}
+

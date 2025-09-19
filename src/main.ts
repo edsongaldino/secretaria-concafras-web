@@ -7,6 +7,7 @@ import { provideEchartsCore } from 'ngx-echarts';
 import * as echarts from 'echarts';
 
 import { provideHttpClient, withFetch } from '@angular/common/http';
+import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 
 // Se você usa rotas:
 import { LOCALE_ID, importProvidersFrom } from '@angular/core';
@@ -28,6 +29,8 @@ bootstrapApplication(AppComponent, {
       // você pode colocar outras opções aqui
     }),
     provideEchartsCore({ echarts }),
-    { provide: LOCALE_ID, useValue: 'pt-BR' }
+    { provide: LOCALE_ID, useValue: 'pt-BR' },
+    provideAnimationsAsync()
+    
   ]
 });
